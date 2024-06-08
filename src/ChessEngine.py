@@ -3,15 +3,16 @@ class Gamestate():
 
         self.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-            ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
+            ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
+            ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
             ]
-        
+        self.moveFunctions = {'P': self.get_Pawn_Moves, 'N': self.get_Knight_Moves, 'B': self.get_Bishop_Moves,
+                              'R': self.get_Rook_Moves, 'Q': self.get_Queen_Moves, 'K': self.get_King_Moves}
         self.whiteToMove = True
         self.moveLog = []
 
@@ -28,6 +29,108 @@ class Gamestate():
             self.board[move.end_Row][move.end_Col] = move.piece_Captured
             self.whiteToMove = not self.whiteToMove
 
+    def get_Valid_Moves(self):
+        return self.get_All_Possible_Moves()
+    
+    def get_All_Possible_Moves(self):
+        moves = []
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                turn = self.board[r][c][0]
+                if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove):
+                    piece = self.board[r][c][1]
+                    self.moveFunctions[piece](r, c, moves)
+        return moves
+
+    def get_Pawn_Moves(self, r, c, moves):
+        if self.whiteToMove:
+            if self.board[r-1][c] == "--":
+                moves.append(Move((r, c), (r-1, c), self.board))
+                if r == 6 and self.board[r-2][c] == "--":
+                    moves.append(Move((r, c), (r-2, c), self.board))
+            if c-1 >= 0:
+                if self.board[r-1][c-1][0] == 'b':
+                    moves.append(Move((r, c), (r-1, c-1), self.board))
+            if c+1 <= 7:
+                if self.board[r-1][c+1][0] == 'b':
+                    moves.append(Move((r, c), (r-1, c+1), self.board))
+        
+        else:
+            if self.board[r+1][c] == "--":
+                moves.append(Move((r, c), (r+1, c), self.board))
+                if r == 1 and self.board[r+2][c] == "--":
+                    moves.append(Move((r, c), (r+2, c), self.board))
+            if c+1 <= 7:
+                if self.board[r+1][c+1][0] == 'w':
+                    moves.append(Move((r, c), (r+1, c+1), self.board))
+            if c-1 >= 0:
+                if self.board[r+1][c-1][0] == 'w':
+                    moves.append(Move((r, c), (r+1, c-1), self.board))
+
+    def get_Knight_Moves(self, r, c, moves):
+        possible_Moves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        ally = 'w' if self.whiteToMove else 'b'
+        for m in possible_Moves:
+            row = r + m[0]
+            col = c + m[1]
+            if 0 <= row < 8 and 0 <= col < 8:
+                piece = self.board[row][col][0]
+                if piece != ally:
+                    moves.append(Move((r,c), (row, col), self.board))
+
+    def get_Bishop_Moves(self, r, c, moves):
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1))
+        enemy = 'b' if self.whiteToMove else 'w'
+        for d in directions:
+            for i in range(1, 8):
+                row = r + d[0] * i
+                col = c + d[1] * i
+                if 0 <= row < 8 and 0 <= col < 8:
+                    piece = self.board[row][col][0]
+                    if piece == '-':
+                        moves.append(Move((r,c), (row, col), self.board))
+                    elif piece == enemy:
+                        moves.append(Move((r, c), (row, col), self.board))
+                        break
+                    else:
+                        break
+                else:
+                    break
+
+    def get_Rook_Moves(self, r, c, moves):
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
+        enemy = 'b' if self.whiteToMove else 'w'
+        for d in directions:
+            for i in range(1, 8):
+                row = r + d[0] * i
+                col = c + d[1] * i
+                if 0 <= row < 8 and 0 <= col < 8:
+                    piece = self.board[row][col][0]
+                    if piece == '-':
+                        moves.append(Move((r,c), (row, col), self.board))
+                    elif piece == enemy:
+                        moves.append(Move((r, c), (row, col), self.board))
+                        break
+                    else:
+                        break
+                else:
+                    break
+
+    def get_Queen_Moves(self, r, c, moves):
+        self.get_Bishop_Moves(r, c, moves)
+        self.get_Rook_Moves(r, c, moves)
+
+    def get_King_Moves(self, r, c, moves):
+        possible_Moves = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+        ally = 'w' if self.whiteToMove else 'b'
+        for i in range(8):
+            row = r + possible_Moves[i][0]
+            col = c + possible_Moves[i][1]
+            if 0 <= row < 8 and 0 <= col < 8:
+                piece = self.board[row][col][0]
+                if piece != ally:
+                    moves.append(Move((r,c), (row, col), self.board))
+
 class Move():
     ranks_To_Rows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
     rows_TO_Ranks = {v: k for k, v in ranks_To_Rows.items()}
@@ -41,6 +144,15 @@ class Move():
         self.end_Col = end_Square[1]
         self.piece_Moved = board[self.start_Row][self.start_Col]
         self.piece_Captured = board[self.end_Row][self.end_Col]
+        self.move_Id = self.start_Row * 1000 + self.start_Col * 100 + self.end_Row * 10 + self.end_Col
+
+    '''
+    overriding the equals method
+    '''
+    def __eq__(self, other):
+        if (isinstance(other, Move)):
+            return self.move_Id == other.move_Id
+        return False
 
     def get_Chess_Notation(self):
         return self.get_Rank_Files(self.start_Row, self.start_Col) + self.get_Rank_Files(self.end_Row, self.end_Col)
