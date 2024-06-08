@@ -1,7 +1,7 @@
 import pygame as p;
 import ChessEngine 
 
-WIDTH = HEIGHT = 720
+WIDTH = HEIGHT = 512
 DIMENSION = 8
 SQUARE_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
@@ -42,6 +42,9 @@ def main():
                     gs.make_Move(move)
                     square_Selected = ()
                     player_Clicks = []
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z:
+                    gs.undo_Move()
 
         draw_Game_State(screen, gs)
         clock.tick(MAX_FPS)
