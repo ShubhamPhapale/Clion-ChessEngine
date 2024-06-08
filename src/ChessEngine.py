@@ -68,19 +68,68 @@ class Gamestate():
                     moves.append(Move((r, c), (r+1, c-1), self.board))
 
     def get_Knight_Moves(self, r, c, moves):
-        pass
+        possible_Moves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        ally = 'w' if self.whiteToMove else 'b'
+        for m in possible_Moves:
+            row = r + m[0]
+            col = c + m[1]
+            if 0 <= row < 8 and 0 <= col < 8:
+                piece = self.board[row][col][0]
+                if piece != ally:
+                    moves.append(Move((r,c), (row, col), self.board))
 
     def get_Bishop_Moves(self, r, c, moves):
-        pass
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1))
+        enemy = 'b' if self.whiteToMove else 'w'
+        for d in directions:
+            for i in range(1, 8):
+                row = r + d[0] * i
+                col = c + d[1] * i
+                if 0 <= row < 8 and 0 <= col < 8:
+                    piece = self.board[row][col][0]
+                    if piece == '-':
+                        moves.append(Move((r,c), (row, col), self.board))
+                    elif piece == enemy:
+                        moves.append(Move((r, c), (row, col), self.board))
+                        break
+                    else:
+                        break
+                else:
+                    break
 
     def get_Rook_Moves(self, r, c, moves):
-        pass
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
+        enemy = 'b' if self.whiteToMove else 'w'
+        for d in directions:
+            for i in range(1, 8):
+                row = r + d[0] * i
+                col = c + d[1] * i
+                if 0 <= row < 8 and 0 <= col < 8:
+                    piece = self.board[row][col][0]
+                    if piece == '-':
+                        moves.append(Move((r,c), (row, col), self.board))
+                    elif piece == enemy:
+                        moves.append(Move((r, c), (row, col), self.board))
+                        break
+                    else:
+                        break
+                else:
+                    break
 
     def get_Queen_Moves(self, r, c, moves):
-        pass
+        self.get_Bishop_Moves(r, c, moves)
+        self.get_Rook_Moves(r, c, moves)
 
     def get_King_Moves(self, r, c, moves):
-        pass
+        possible_Moves = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+        ally = 'w' if self.whiteToMove else 'b'
+        for i in range(8):
+            row = r + possible_Moves[i][0]
+            col = c + possible_Moves[i][1]
+            if 0 <= row < 8 and 0 <= col < 8:
+                piece = self.board[row][col][0]
+                if piece != ally:
+                    moves.append(Move((r,c), (row, col), self.board))
 
 class Move():
     ranks_To_Rows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
