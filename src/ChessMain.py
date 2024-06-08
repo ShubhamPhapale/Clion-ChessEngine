@@ -20,10 +20,29 @@ def main():
     gs = ChessEngine.Gamestate()
     load_Images()
     running = True
+    square_Selected = ()
+    player_Clicks = []
     while running: 
         for  e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos()
+                col = location[0] // SQUARE_SIZE
+                row = location[1] // SQUARE_SIZE
+                if square_Selected == (row, col):
+                    square_Selected = ()
+                    player_Clicks = []
+                else:
+                    square_Selected = (row, col)
+                    player_Clicks.append(square_Selected)
+                if len(player_Clicks) == 2:
+                    move = ChessEngine.Move(player_Clicks[0], player_Clicks[1], gs.board)
+                    print(move.get_Chess_Notation())
+                    gs.make_Move(move)
+                    square_Selected = ()
+                    player_Clicks = []
+
         draw_Game_State(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
