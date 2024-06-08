@@ -15,12 +15,20 @@ class Gamestate():
                               'R': self.get_Rook_Moves, 'Q': self.get_Queen_Moves, 'K': self.get_King_Moves}
         self.whiteToMove = True
         self.moveLog = []
+        self.white_King_Location = (7, 4)
+        self.black_King_Location = (0, 4)
+        self.checkmate = False
+        self.stalemate = False
 
     def make_Move(self, move):
         self.board[move.start_Row][move.start_Col] = "--"
         self.board[move.end_Row][move.end_Col] = move.piece_Moved
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
+        if move.piece_Moved == 'wK':
+            self.white_King_Location = (move.end_Row, move.end_Col)
+        elif move.piece_Moved == 'bK':
+            self.black_King_Location = (move.end_Row, move.end_Col)
 
     def undo_Move(self):
         if len(self.moveLog) != 0:
@@ -28,10 +36,46 @@ class Gamestate():
             self.board[move.start_Row][move.start_Col] = move.piece_Moved
             self.board[move.end_Row][move.end_Col] = move.piece_Captured
             self.whiteToMove = not self.whiteToMove
+            if move.piece_Moved == 'wK':
+                self.white_King_Location = (move.start_Row, move.start_Col)
+            elif move.piece_Moved == 'bK':
+                self.black_King_Location = (move.start_Row, move.start_Col)
 
     def get_Valid_Moves(self):
-        return self.get_All_Possible_Moves()
+        moves = self.get_All_Possible_Moves()
+        for i in range(len(moves)-1, -1, -1): # when removing from a list go from last to first (backwards)
+            self.make_Move(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            if self.in_Check():
+                moves.remove(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            self.undo_Move()
+        if len(moves) == 0:
+            if self.in_Check():
+                self.checkmate = True
+            else:
+                self.stalemate = True
+        else:
+            self.checkmate = False
+            self.stalemate = False
+
+        return moves
     
+    def in_Check(self):
+        if self.whiteToMove:
+            return self.square_Under_Attack(self.white_King_Location[0], self.white_King_Location[1])
+        else:
+            return self.square_Under_Attack(self.black_King_Location[0], self.black_King_Location[1])
+
+    def square_Under_Attack(self, r, c):
+        self.whiteToMove = not self.whiteToMove
+        opponent_Moves = self.get_All_Possible_Moves()
+        self.whiteToMove = not self.whiteToMove
+        for move in opponent_Moves:
+            if move.end_Row == r and move.end_Col == c:
+                return True
+        return False
+
     def get_All_Possible_Moves(self):
         moves = []
         for r in range(len(self.board)):
