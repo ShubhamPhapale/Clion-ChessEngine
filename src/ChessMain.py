@@ -19,6 +19,9 @@ def main():
     screen.fill(p.Color("white"))
     gs = ChessEngine.Gamestate()
     valid_Moves = gs.get_Valid_Moves()
+    # debugging valid moves
+    for m in valid_Moves:
+        print(m.get_Chess_Notation())
     move_Made = False
     load_Images()
     running = True
@@ -41,7 +44,9 @@ def main():
                 if len(player_Clicks) == 2:
                     move = ChessEngine.Move(player_Clicks[0], player_Clicks[1], gs.board)
                     if move in valid_Moves:
+                        print("--------------------")
                         print(move.get_Chess_Notation())
+                        print("--------------------")
                         gs.make_Move(move) 
                         move_Made = True
                     square_Selected = ()
@@ -53,6 +58,9 @@ def main():
                     
         if move_Made:
             valid_Moves = gs.get_Valid_Moves()
+            # debugging valid moves
+            for m in valid_Moves:
+                print(m.get_Chess_Notation())
             move_Made = False
 
         draw_Game_State(screen, gs)
