@@ -212,7 +212,7 @@ class Gamestate():
                         pawn_Promotion = True
                     moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, pawn_Promotion = pawn_Promotion))
                 if (r + move_Amount, c - 1) == self.enpassant_Possible:
-                    moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, enPassant = True))
+                    moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, en_Passant = True))
         if c + 1 <= 7:
             if not piece_Pinned or pin_Direction == (move_Amount, 1):
                 if self.board[r + move_Amount][c + 1][0] == enemy:
@@ -220,7 +220,7 @@ class Gamestate():
                         pawn_Promotion = True
                     moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, pawn_Promotion = pawn_Promotion))
                 if (r + move_Amount, c + 1) == self.enpassant_Possible:
-                    moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, enPassant = True))
+                    moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, en_Passant = True))
 
     def get_Knight_Moves(self, r, c, moves):
         piece_Pinned = False
@@ -333,18 +333,18 @@ class Move():
     filess_To_Cols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     Cols_TO_Files = {v: k for k, v in filess_To_Cols.items()}
 
-    def __init__(self, start_Square, end_Square, board, enPassant = False, pawn_Promotion = False):
+    def __init__(self, start_Square, end_Square, board, en_Passant = False, pawn_Promotion = False):
         self.start_Row = start_Square[0]
         self.start_Col = start_Square[1]
         self.end_Row = end_Square[0]
         self.end_Col = end_Square[1]
         self.piece_Moved = board[self.start_Row][self.start_Col]
         self.piece_Captured = board[self.end_Row][self.end_Col]
-        self.en_Passant = enPassant
+        self.en_Passant = en_Passant
         self.pawn_Promotion = pawn_Promotion
         self.move_Id = self.start_Row * 1000 + self.start_Col * 100 + self.end_Row * 10 + self.end_Col
 
-        if enPassant:
+        if en_Passant:
             self.piece_Captured == 'bP' if self.piece_Moved == 'wP' else 'wP'
 
     '''
