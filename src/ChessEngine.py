@@ -70,7 +70,7 @@ class Gamestate():
                         if valid_Square[0] == check_Row and valid_Square[1] == check_Col:
                             break
                 for i in range(len(moves) - 1, -1, -1):
-                    if moves[i].piece_Moved != 'K':
+                    if moves[i].piece_Moved[1] != 'K':
                         if not (moves[i].end_Row, moves[i].end_Col) in valid_Squares:
                             moves.remove(moves[i])
             else:
@@ -129,7 +129,7 @@ class Gamestate():
                             break
                     elif end_Piece[0] == enemy:
                         piece_Type = end_Piece[1]
-                        if (0 <= i < 3 and piece_Type == 'R') or \
+                        if (0 <= i < 4 and piece_Type == 'R') or \
                             (4 <= i < 8 and piece_Type == 'B') or \
                             (j == 1 and piece_Type == 'P' and ((enemy == 'w' and 6 <= i < 8) or (enemy == 'b' and 4 <= i < 6))) or \
                             (piece_Type == 'Q') or (j == 1 and piece_Type == 'K'):
@@ -146,10 +146,10 @@ class Gamestate():
                     break
         possible_Moves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
         for m in possible_Moves:
-            row = start_Row + m[0]
-            col = start_Col + m[1]
-            if 0 <= row < 8 and 0 <= col < 8:
-                end_Piece = self.board[row][col]
+            end_Row = start_Row + m[0]
+            end_Col = start_Col + m[1]
+            if 0 <= end_Row < 8 and 0 <= end_Col < 8:
+                end_Piece = self.board[end_Row][end_Col]
                 if end_Piece == enemy and end_Piece[1] == 'N':
                     in_Check = True
                     checks.append((end_Row, end_Col, m[0], m[1]))
