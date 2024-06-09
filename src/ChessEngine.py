@@ -65,7 +65,7 @@ class Gamestate():
                     valid_Squares = [(check_Row, check_Col)]
                 else:
                     for i in range(1, 8):
-                        valid_Square = (king_Row + check[2] * i, king_Col + check[3] * i) # check[2] & check[3] are check directions
+                        valid_Square = (king_Row + check[2] * i, king_Col + check[3] * i) 
                         valid_Squares.append(valid_Square)
                         if valid_Square[0] == check_Row and valid_Square[1] == check_Col:
                             break
