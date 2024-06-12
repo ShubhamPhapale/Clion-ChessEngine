@@ -23,6 +23,11 @@ class Gamestate():
         self.checkmate = False
         self.stalemate = False
         self.enpassant_Possible = ()
+        self.white_Castle_Kingside = True
+        self.white_Castle_Queenside = True
+        self.black_Castle_Kingside = True
+        self.black_Castle_Queenside = True
+        self.castle_Rights_Log = [castle_Rights(self.white_Castle_Kingside, self.white_Castle_Queenside, self.black_Castle_Kingside, self.black_Castle_Queenside)]
 
     def make_Move(self, move):
         self.board[move.start_Row][move.start_Col] = "--"
@@ -46,6 +51,17 @@ class Gamestate():
             promotedPiece = input("Promote to Q, R, B or N:")
             self.board[move.end_Row][move.end_Col] = move.piece_Moved[0] + promotedPiece
 
+        self.update_Castle_Rights(move)
+        self.castle_Rights_Log.append(castle_Rights(self.white_Castle_Kingside, self.white_Castle_Queenside, self.black_Castle_Kingside, self.black_Castle_Queenside))
+        
+        if move.castle:
+            if move.end_Col - move.start_Col == 2:
+                self.board[move.end_Row][move.end_Col - 1] = self.board[move.end_Row][move.end_Col + 1]
+                self.board[move.end_Row][move.end_Col + 1] = "--"
+            else:
+                self.board[move.end_Row][move.end_Col + 1] = self.board[move.end_Row][move.end_Col - 2]
+                self.board[move.end_Row][move.end_Col - 2] = "--"
+
     def undo_Move(self):
         if len(self.moveLog) != 0:
             move = self.moveLog.pop()
@@ -64,6 +80,21 @@ class Gamestate():
             
             if move.piece_Moved[1] == 'p' and abs(move.start_Row - move.end_Row) == 2:
                 self.enpassant_Possible = () 
+
+            self.castle_Rights_Log.pop()
+            castle_Rights = self.castle_Rights_Log[-1]
+            self.white_Castle_Kingside = castle_Rights.wks
+            self.white_Castle_Queenside = castle_Rights.wqs
+            self.black_Castle_Kingside = castle_Rights.bks
+            self.black_Castle_Queenside = castle_Rights.bqs
+
+            if move.castle:
+                if move.end_Col - move.start_Col == 2:
+                    self.board[move.end_Row][move.end_Col + 1] = self.board[move.end_Row][move.end_Col - 1]
+                    self.board[move.end_Row][move.end_Col - 1] = "--"
+                else:
+                    self.board[move.end_Row][move.end_Col - 2] = self.board[move.end_Row][move.end_Col + 1]
+                    self.board[move.end_Row][move.end_Col + 1] = "--"
 
     def get_Valid_Moves(self):
         moves = []
@@ -119,62 +150,6 @@ class Gamestate():
                     piece = self.board[r][c][1]
                     self.moveFunctions[piece](r, c, moves)
         return moves
-
-    def check_For_Pins_And_Checks(self):
-        pins = []
-        checks = []
-        in_Check = False
-        if self.whiteToMove:
-            enemy = 'b'
-            ally = 'w'
-            start_Row = self.white_King_Location[0]
-            start_Col = self.white_King_Location[1]
-        else: 
-            enemy = 'w'
-            ally = 'b'
-            start_Row = self.black_King_Location[0]
-            start_Col = self.black_King_Location[1]
-        directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
-        for i in range(len(directions)):
-            d = directions[i]
-            possible_Pin = ()
-            for j in range(1, 8):
-                end_Row = start_Row + d[0] * j
-                end_Col = start_Col + d[1] * j
-                if 0 <= end_Row < 8 and 0 <= end_Col < 8:
-                    end_Piece = self.board[end_Row][end_Col]
-                    if end_Piece[0] == ally and end_Piece[1] != 'K':
-                        if possible_Pin == ():
-                            possible_Pin = (end_Row, end_Col, d[0], d[1])
-                        else:
-                            break
-                    elif end_Piece[0] == enemy:
-                        piece_Type = end_Piece[1]
-                        if (0 <= i < 4 and piece_Type == 'R') or \
-                            (4 <= i < 8 and piece_Type == 'B') or \
-                            (j == 1 and piece_Type == 'P' and ((enemy == 'w' and 6 <= i < 8) or (enemy == 'b' and 4 <= i < 6))) or \
-                            (piece_Type == 'Q') or (j == 1 and piece_Type == 'K'):
-                            if possible_Pin == ():
-                                in_Check = True
-                                checks.append((end_Row, end_Col, d[0], d[1]))
-                                break
-                            else:
-                                pins.append(possible_Pin)
-                                break
-                        else:
-                            break
-                else:
-                    break
-        possible_Moves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
-        for m in possible_Moves:
-            end_Row = start_Row + m[0]
-            end_Col = start_Col + m[1]
-            if 0 <= end_Row < 8 and 0 <= end_Col < 8:
-                end_Piece = self.board[end_Row][end_Col]
-                if end_Piece == enemy and end_Piece[1] == 'N':
-                    in_Check = True
-                    checks.append((end_Row, end_Col, m[0], m[1]))
-        return in_Check, pins, checks
 
     def get_Pawn_Moves(self, r, c, moves):
         piece_Pinned = False
@@ -325,7 +300,143 @@ class Gamestate():
                         self.white_King_Location = (r, c)
                     else:
                         self.black_King_Location = (r, c)
+        self.get_Castle_Moves(r, c, moves, ally)
 
+    def get_Castle_Moves (self, r, c, moves, ally):
+        in_Check = self.square_Under_Attack(r, c, ally)
+        if in_Check:
+            return
+        if (self.whiteToMove and self.white_Castle_Kingside) or (not self.whiteToMove and self.black_Castle_Kingside):
+            self.get_Kingside_Castle_Moves(r, c, moves, ally)
+        if (self.whiteToMove and self.white_Castle_Queenside) or (not self.whiteToMove and self.black_Castle_Queenside):
+            self.get_Queenside_Castle_Moves(r, c, moves, ally)
+
+    def get_Kingside_Castle_Moves(self, r, c, moves, ally):
+        if self.board[r][c + 1] == "--" and self.board[r][c + 2] == "--" and \
+            not self.square_Under_Attack(r, c + 1, ally) and not self.square_Under_Attack(r, c + 2, ally):
+            moves.append(Move((r, c), (r, c + 2), self.board, castle = True))
+
+    def get_Queenside_Castle_Moves (self, r, c, moves, ally):
+        if self.board[r][c - 1] == "--" and self.board[r][c - 2] == "--" and self.board[r][c - 3] == "--" and \
+            not self.square_Under_Attack(r, c - 1, ally) and not self.square_Under_Attack(r, c - 2, ally):
+            moves.append(Move((r, c), (r, c - 2), self.board, castle = True))
+
+    def square_Under_Attack(self, r, c, ally):
+        enemy = 'w' if ally == 'b' else 'b'
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
+        for i in range(len(directions)):
+            d = directions[i]
+            for j in range(1, 8):
+                end_Row = r + d[0] * j
+                end_Col = c + d[1] * j
+                if 0 <= end_Row < 8 and 0 <= end_Col < 8:
+                    end_Piece = self.board[end_Row][end_Col]
+                    if end_Piece[0] == ally:
+                        break
+                    elif end_Piece[0] == enemy:
+                        piece_Type = end_Piece[1]
+                        if (0 <= i < 4 and piece_Type == 'R') or \
+                            (4 <= i < 8 and piece_Type == 'B') or \
+                            (j == 1 and piece_Type == 'P' and ((enemy == 'w' and 6 <= i < 8) or (enemy == 'b' and 4 <= i < 6))) or \
+                            (piece_Type == 'Q') or (j == 1 and piece_Type == 'K'):
+                            return True
+                        else:
+                            break
+                else:
+                    break
+        possible_Moves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        for m in possible_Moves:
+            end_Row = r + m[0]
+            end_Col = c + m[1]
+            if 0 <= end_Row < 8 and 0 <= end_Col < 8:
+                end_Piece = self.board[end_Row][end_Col]
+                if end_Piece == enemy and end_Piece[1] == 'N':
+                    return True
+        
+        return False
+    
+    def check_For_Pins_And_Checks(self):
+        pins = []
+        checks = []
+        in_Check = False
+        if self.whiteToMove:
+            enemy = 'b'
+            ally = 'w'
+            start_Row = self.white_King_Location[0]
+            start_Col = self.white_King_Location[1]
+        else: 
+            enemy = 'w'
+            ally = 'b'
+            start_Row = self.black_King_Location[0]
+            start_Col = self.black_King_Location[1]
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
+        for i in range(len(directions)):
+            d = directions[i]
+            possible_Pin = ()
+            for j in range(1, 8):
+                end_Row = start_Row + d[0] * j
+                end_Col = start_Col + d[1] * j
+                if 0 <= end_Row < 8 and 0 <= end_Col < 8:
+                    end_Piece = self.board[end_Row][end_Col]
+                    if end_Piece[0] == ally and end_Piece[1] != 'K':
+                        if possible_Pin == ():
+                            possible_Pin = (end_Row, end_Col, d[0], d[1])
+                        else:
+                            break
+                    elif end_Piece[0] == enemy:
+                        piece_Type = end_Piece[1]
+                        if (0 <= i < 4 and piece_Type == 'R') or \
+                            (4 <= i < 8 and piece_Type == 'B') or \
+                            (j == 1 and piece_Type == 'P' and ((enemy == 'w' and 6 <= i < 8) or (enemy == 'b' and 4 <= i < 6))) or \
+                            (piece_Type == 'Q') or (j == 1 and piece_Type == 'K'):
+                            if possible_Pin == ():
+                                in_Check = True
+                                checks.append((end_Row, end_Col, d[0], d[1]))
+                                break
+                            else:
+                                pins.append(possible_Pin)
+                                break
+                        else:
+                            break
+                else:
+                    break
+        possible_Moves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        for m in possible_Moves:
+            end_Row = start_Row + m[0]
+            end_Col = start_Col + m[1]
+            if 0 <= end_Row < 8 and 0 <= end_Col < 8:
+                end_Piece = self.board[end_Row][end_Col]
+                if end_Piece == enemy and end_Piece[1] == 'N':
+                    in_Check = True
+                    checks.append((end_Row, end_Col, m[0], m[1]))
+        return in_Check, pins, checks
+    
+    def update_Castle_Rights(self, move):
+        if move.piece_Moved == 'wK':
+            self.white_Castle_Kingside = False
+            self.white_Castle_Queenside = False
+        elif move.piece_Moved == 'bK':
+            self.black_Castle_Kingside = False
+            self.black_Castle_Queenside = False
+        elif move.piece_Moved == 'wR':
+            if move.start_Row == 7:
+                if move.start_Col == 7:
+                    self.white_Castle_Kingside = False
+                elif move.start_Col == 0:
+                    self.white_Castle_Queenside = False
+        elif move.piece_Moved == 'bR':
+            if move.start_Row == 0:
+                if move.start_Col == 7:
+                    self.black_Castle_Kingside = False
+                elif move.start_Col == 0:
+                    self.black_Castle_Queenside = False
+
+class castle_Rights():
+    def __init__(self, wks, wqs, bks, bqs):
+        self.wks = wks
+        self.wqs = wqs
+        self.bks = bks
+        self.bqs = bqs
 
 class Move():
     ranks_To_Rows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
@@ -333,7 +444,7 @@ class Move():
     filess_To_Cols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     Cols_TO_Files = {v: k for k, v in filess_To_Cols.items()}
 
-    def __init__(self, start_Square, end_Square, board, en_Passant = False, pawn_Promotion = False):
+    def __init__(self, start_Square, end_Square, board, en_Passant = False, pawn_Promotion = False, castle = False):
         self.start_Row = start_Square[0]
         self.start_Col = start_Square[1]
         self.end_Row = end_Square[0]
@@ -342,6 +453,7 @@ class Move():
         self.piece_Captured = board[self.end_Row][self.end_Col]
         self.en_Passant = en_Passant
         self.pawn_Promotion = pawn_Promotion
+        self.castle = castle
         self.move_Id = self.start_Row * 1000 + self.start_Col * 100 + self.end_Row * 10 + self.end_Col
 
         if en_Passant:
