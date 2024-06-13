@@ -26,7 +26,7 @@ def main():
     square_Selected = ()
     player_Clicks = []
     game_Over = False
-    white_Player = True
+    white_Player = False
     black_Player = False
 
     while running: 
@@ -93,6 +93,7 @@ def main():
             else:
                 draw_Text(screen, "White Wins By Checkmate")
         elif gs.stalemate:
+            game_Over = True
             draw_Text(screen, "Stalemate")
     
 
