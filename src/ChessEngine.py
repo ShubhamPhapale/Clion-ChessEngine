@@ -11,12 +11,31 @@ class Gamestate():
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
             ]
+        # self.board = [
+        #     ["--", "--", "--", "--", "wR", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "wR", "--", "bP", "bP"],
+        #     ["--", "--", "bP", "--", "--", "bP", "--", "--"],
+        #     ["wB", "--", "--", "bP", "--", "--", "--", "bK"],
+        #     ["bP", "--", "--", "wP", "--", "--", "bN", "--"],
+        #     ["wP", "--", "wP", "--", "--", "--", "wK", "--"],
+        #     ["--", "wP", "--", "--", "--", "--", "wB", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "bQ", "--"]
+        #     ]
         self.moveFunctions = {'P': self.get_Pawn_Moves, 'N': self.get_Knight_Moves, 'B': self.get_Bishop_Moves,
                               'R': self.get_Rook_Moves, 'Q': self.get_Queen_Moves, 'K': self.get_King_Moves}
         self.whiteToMove = True
         self.moveLog = []
         self.white_King_Location = (7, 4)
         self.black_King_Location = (0, 4)
+
+        # for custom starting position
+        for i in range(0, 8):
+            for j in range(0, 8):
+                if self.board[i][j] == 'wK':
+                    self.white_King_Location = (i, j)
+                if self.board[i][j] == 'bK':
+                    self.black_King_Location = (i, j)
+
         self.in_Check = False
         self.pins = []
         self.checks = []
@@ -48,8 +67,9 @@ class Gamestate():
             self.board[move.start_Row][move.end_Col] = "--"
         
         if move.pawn_Promotion:
-            promotedPiece = input("Promote to Q, R, B or N:")
-            self.board[move.end_Row][move.end_Col] = move.piece_Moved[0] + promotedPiece
+            # promoted_Piece = input("Promote to Q, R, B or N:")
+            promoted_Piece = 'Q'
+            self.board[move.end_Row][move.end_Col] = move.piece_Moved[0] + promoted_Piece
 
         self.update_Castle_Rights(move)
         self.castle_Rights_Log.append(castle_Rights(self.white_Castle_Kingside, self.white_Castle_Queenside, self.black_Castle_Kingside, self.black_Castle_Queenside))
@@ -95,6 +115,9 @@ class Gamestate():
                 else:
                     self.board[move.end_Row][move.end_Col - 2] = self.board[move.end_Row][move.end_Col + 1]
                     self.board[move.end_Row][move.end_Col + 1] = "--"
+
+            self.checkmate = False
+            self.stalemate = False
 
     def get_Valid_Moves(self):
         moves = []
@@ -312,14 +335,16 @@ class Gamestate():
             self.get_Queenside_Castle_Moves(r, c, moves, ally)
 
     def get_Kingside_Castle_Moves(self, r, c, moves, ally):
-        if self.board[r][c + 1] == "--" and self.board[r][c + 2] == "--" and \
-            not self.square_Under_Attack(r, c + 1, ally) and not self.square_Under_Attack(r, c + 2, ally):
-            moves.append(Move((r, c), (r, c + 2), self.board, castle = True))
+        if c + 2 < 8:
+            if self.board[r][c + 1] == "--" and self.board[r][c + 2] == "--" and \
+                not self.square_Under_Attack(r, c + 1, ally) and not self.square_Under_Attack(r, c + 2, ally):
+                moves.append(Move((r, c), (r, c + 2), self.board, castle = True))
 
     def get_Queenside_Castle_Moves (self, r, c, moves, ally):
-        if self.board[r][c - 1] == "--" and self.board[r][c - 2] == "--" and self.board[r][c - 3] == "--" and \
-            not self.square_Under_Attack(r, c - 1, ally) and not self.square_Under_Attack(r, c - 2, ally):
-            moves.append(Move((r, c), (r, c - 2), self.board, castle = True))
+        if c - 2 > 0:
+            if self.board[r][c - 1] == "--" and self.board[r][c - 2] == "--" and self.board[r][c - 3] == "--" and \
+                not self.square_Under_Attack(r, c - 1, ally) and not self.square_Under_Attack(r, c - 2, ally):
+                moves.append(Move((r, c), (r, c - 2), self.board, castle = True))
 
     def square_Under_Attack(self, r, c, ally):
         enemy = 'w' if ally == 'b' else 'b'
@@ -350,7 +375,7 @@ class Gamestate():
             end_Col = c + m[1]
             if 0 <= end_Row < 8 and 0 <= end_Col < 8:
                 end_Piece = self.board[end_Row][end_Col]
-                if end_Piece == enemy and end_Piece[1] == 'N':
+                if end_Piece[0] == enemy and end_Piece[1] == 'N':
                     return True
         
         return False
@@ -406,7 +431,7 @@ class Gamestate():
             end_Col = start_Col + m[1]
             if 0 <= end_Row < 8 and 0 <= end_Col < 8:
                 end_Piece = self.board[end_Row][end_Col]
-                if end_Piece == enemy and end_Piece[1] == 'N':
+                if end_Piece[0] == enemy and end_Piece[1] == 'N':
                     in_Check = True
                     checks.append((end_Row, end_Col, m[0], m[1]))
         return in_Check, pins, checks
