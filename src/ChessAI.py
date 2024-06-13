@@ -9,14 +9,17 @@ def find_Random_Move(valid_Moves):
     return valid_Moves[random.randint(0, len(valid_Moves) - 1)]
 
 def find_Best_Move(gs, valid_Moves):
-    global next_Move
+    global next_Move, nodes
     next_Move = None
     random.shuffle(valid_Moves)
+    nodes = 0
     find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gs.whiteToMove else -1)
+    print("Nodes Visited:", nodes)
     return next_Move
 
 def find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, depth, alpha, beta, turn):
-    global next_Move
+    global next_Move, nodes
+    nodes += 1
     if depth == 0:
         return score_Board(gs) * turn
     
@@ -30,7 +33,7 @@ def find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, depth, alpha, beta, turn):
             max_Score = score
             if depth == DEPTH:
                 next_Move = move
-                print(next_Move.get_Chess_Notation(), max_Score)
+                print("Current Best Move is", next_Move.get_Chess_Notation(), "with score", max_Score)
         gs.undo_Move()
         if max_Score > alpha:
             alpha = max_Score

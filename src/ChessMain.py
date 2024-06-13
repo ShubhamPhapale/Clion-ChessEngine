@@ -82,7 +82,7 @@ def main():
         if move_Made:
             if animate:
                 animate_Move(gs.moveLog[-1], screen, gs.board, clock)
-                print(gs.moveLog[-1].get_Chess_Notation())
+                print("Move made:", gs.moveLog[-1].get_Chess_Notation())
             valid_Moves = gs.get_Valid_Moves()
             move_Made = False
             animate = False
