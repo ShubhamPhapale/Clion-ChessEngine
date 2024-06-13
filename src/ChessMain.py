@@ -73,9 +73,6 @@ def main():
 
         if not game_Over and not human_Turn:
             AI_Move = ChessAI.find_Random_Move(valid_Moves)
-            for m in valid_Moves:
-                print(m.get_Chess_Notation())
-            print("-------")
             gs.make_Move(AI_Move)
             move_Made = True
             animate = True
