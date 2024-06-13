@@ -26,8 +26,8 @@ def main():
     square_Selected = ()
     player_Clicks = []
     game_Over = False
-    white_Player = False
-    black_Player = False
+    white_Player = True
+    black_Player = True
 
     while running: 
         human_Turn = (gs.whiteToMove and white_Player) or (not gs.whiteToMove and black_Player)
@@ -71,8 +71,10 @@ def main():
                     animate = False
                     game_Over = False
 
-        if not game_Over and not human_Turn:
-            AI_Move = ChessAI.find_Random_Move(valid_Moves)
+        if not game_Over and not human_Turn and not move_Made:
+            AI_Move = ChessAI.find_Best_Move_Min_Max(gs, valid_Moves)
+            if AI_Move is None:
+                AI_Move = ChessAI.find_Random_Move(valid_Moves)
             gs.make_Move(AI_Move)
             move_Made = True
             animate = True
@@ -80,6 +82,7 @@ def main():
         if move_Made:
             if animate:
                 animate_Move(gs.moveLog[-1], screen, gs.board, clock)
+                print(gs.moveLog[-1].get_Chess_Notation())
             valid_Moves = gs.get_Valid_Moves()
             move_Made = False
             animate = False
