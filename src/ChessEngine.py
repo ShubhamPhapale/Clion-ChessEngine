@@ -350,7 +350,7 @@ class Gamestate():
             end_Col = c + m[1]
             if 0 <= end_Row < 8 and 0 <= end_Col < 8:
                 end_Piece = self.board[end_Row][end_Col]
-                if end_Piece == enemy and end_Piece[1] == 'N':
+                if end_Piece[0] == enemy and end_Piece[1] == 'N':
                     return True
         
         return False
@@ -406,7 +406,7 @@ class Gamestate():
             end_Col = start_Col + m[1]
             if 0 <= end_Row < 8 and 0 <= end_Col < 8:
                 end_Piece = self.board[end_Row][end_Col]
-                if end_Piece == enemy and end_Piece[1] == 'N':
+                if end_Piece[0] == enemy and end_Piece[1] == 'N':
                     in_Check = True
                     checks.append((end_Row, end_Col, m[0], m[1]))
         return in_Check, pins, checks

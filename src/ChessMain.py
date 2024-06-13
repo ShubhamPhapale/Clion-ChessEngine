@@ -1,5 +1,5 @@
 import pygame as p;
-import ChessEngine 
+import ChessEngine, ChessAI
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -26,13 +26,16 @@ def main():
     square_Selected = ()
     player_Clicks = []
     game_Over = False
+    white_Player = True
+    black_Player = False
 
     while running: 
+        human_Turn = (gs.whiteToMove and white_Player) or (not gs.whiteToMove and black_Player)
         for  e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not game_Over:
+                if not game_Over and human_Turn:
                     location = p.mouse.get_pos()
                     col = location[0] // SQUARE_SIZE
                     row = location[1] // SQUARE_SIZE
@@ -67,6 +70,15 @@ def main():
                     move_Made = False
                     animate = False
                     game_Over = False
+
+        if not game_Over and not human_Turn:
+            AI_Move = ChessAI.find_Random_Move(valid_Moves)
+            for m in valid_Moves:
+                print(m.get_Chess_Notation())
+            print("-------")
+            gs.make_Move(AI_Move)
+            move_Made = True
+            animate = True
 
         if move_Made:
             if animate:
