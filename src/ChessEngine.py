@@ -78,7 +78,7 @@ class Gamestate():
                 self.board[move.start_Row][move.end_Col] = move.piece_Captured
                 self.enpassant_Possible = (move.end_Row, move.end_Col)
             
-            if move.piece_Moved[1] == 'p' and abs(move.start_Row - move.end_Row) == 2:
+            if move.piece_Moved[1] == 'P' and abs(move.start_Row - move.end_Row) == 2:
                 self.enpassant_Possible = () 
 
             self.castle_Rights_Log.pop()
@@ -457,7 +457,7 @@ class Move():
         self.move_Id = self.start_Row * 1000 + self.start_Col * 100 + self.end_Row * 10 + self.end_Col
 
         if en_Passant:
-            self.piece_Captured == 'bP' if self.piece_Moved == 'wP' else 'wP'
+            self.piece_Captured = 'bP' if self.piece_Moved == 'wP' else 'wP'
 
     '''
     overriding the equals method
