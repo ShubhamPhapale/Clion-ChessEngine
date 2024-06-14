@@ -1,5 +1,6 @@
 import pygame as p;
 import ChessEngine, ChessAI
+from multiprocessing import Process, Queue
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 256
@@ -33,7 +34,10 @@ def main():
     player_Clicks = []
     game_Over = False
     white_Player = True
-    black_Player = True
+    black_Player = False
+    AI_Thinking = False
+    move_Finder_Process = None
+    move_Undone = False
 
     while running: 
         human_Turn = (gs.whiteToMove and white_Player) or (not gs.whiteToMove and black_Player)
@@ -42,7 +46,7 @@ def main():
                 running = False
             
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not game_Over and human_Turn:
+                if not game_Over:
                     location = p.mouse.get_pos()
                     col = location[0] // SQUARE_SIZE
                     row = location[1] // SQUARE_SIZE
@@ -52,7 +56,7 @@ def main():
                     else:
                         square_Selected = (row, col)
                         player_Clicks.append(square_Selected)
-                    if len(player_Clicks) == 2:
+                    if len(player_Clicks) == 2  and human_Turn:
                         move = ChessEngine.Move(player_Clicks[0], player_Clicks[1], gs.board)
                         for i in range(len(valid_Moves)):
                             if move == valid_Moves[i]:
@@ -72,6 +76,10 @@ def main():
                     move_Made = True
                     animate = False
                     game_Over = False
+                    if AI_Thinking:
+                        move_Finder_Process.terminate()
+                        AI_Thinking = False
+                    move_Undone = True
                 if e.key == p.K_r:
                     gs = ChessEngine.Gamestate()
                     valid_Moves = gs.get_Valid_Moves()
@@ -80,14 +88,26 @@ def main():
                     move_Made = False
                     animate = False
                     game_Over = False
+                    if AI_Thinking:
+                        move_Finder_Process.terminate()
+                        AI_Thinking = False
+                    move_Undone = True
 
-        if not game_Over and not human_Turn and not move_Made:
-            AI_Move = ChessAI.find_Best_Move(gs, valid_Moves)
-            if AI_Move is None:
-                AI_Move = ChessAI.find_Random_Move(valid_Moves)
-            gs.make_Move(AI_Move)
-            move_Made = True
-            animate = True
+        if not game_Over and not human_Turn and not move_Made and not move_Undone:
+            if not AI_Thinking:
+                AI_Thinking = True
+                return_Queue = Queue()
+                move_Finder_Process = Process(target = ChessAI.find_Best_Move, args = (gs, valid_Moves, return_Queue))
+                move_Finder_Process.start()
+
+            if not move_Finder_Process.is_alive():  
+                AI_Move = return_Queue.get()
+                if AI_Move is None:
+                    AI_Move = ChessAI.find_Random_Move(valid_Moves)
+                gs.make_Move(AI_Move)
+                move_Made = True
+                animate = True
+                AI_Thinking = False
 
         if move_Made:
             if animate:
@@ -96,6 +116,7 @@ def main():
             valid_Moves = gs.get_Valid_Moves()
             move_Made = False
             animate = False
+            move_Undone = False
 
         draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font)
 
