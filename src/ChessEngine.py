@@ -42,6 +42,7 @@ class Gamestate():
         self.checkmate = False
         self.stalemate = False
         self.enpassant_Possible = ()
+        self.enpassant_Possible_Log = [self.enpassant_Possible]
         self.current_Castling_Right = castle_Rights(True, True, True, True)
 
         #Don't forget to update current castling right for custom position
@@ -72,9 +73,6 @@ class Gamestate():
             promoted_Piece = 'Q'
             self.board[move.end_Row][move.end_Col] = move.piece_Moved[0] + promoted_Piece
 
-        self.update_Castle_Rights(move)
-        self.castle_Rights_Log.append(castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs, self.current_Castling_Right.bks, self.current_Castling_Right.bqs))
-        
         if move.castle:
             if move.end_Col - move.start_Col == 2:
                 self.board[move.end_Row][move.end_Col - 1] = self.board[move.end_Row][move.end_Col + 1]
@@ -82,6 +80,11 @@ class Gamestate():
             else:
                 self.board[move.end_Row][move.end_Col + 1] = self.board[move.end_Row][move.end_Col - 2]
                 self.board[move.end_Row][move.end_Col - 2] = "--"
+
+        self.enpassant_Possible_Log.append(self.enpassant_Possible)
+
+        self.update_Castle_Rights(move)
+        self.castle_Rights_Log.append(castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs, self.current_Castling_Right.bks, self.current_Castling_Right.bqs))
 
     def undo_Move(self):
         if len(self.moveLog) != 0:
@@ -97,17 +100,13 @@ class Gamestate():
             if move.en_Passant:
                 self.board[move.end_Row][move.end_Col] = "--"
                 self.board[move.start_Row][move.end_Col] = move.piece_Captured
-                self.enpassant_Possible = (move.end_Row, move.end_Col)
-            
-            if move.piece_Moved[1] == 'P' and abs(move.start_Row - move.end_Row) == 2:
-                self.enpassant_Possible = () 
+
+            self.enpassant_Possible_Log.pop()
+            self.enpassant_Possible = self.enpassant_Possible_Log[-1]
 
             self.castle_Rights_Log.pop()
-            castle_Rights = self.castle_Rights_Log[-1]
-            self.current_Castling_Right.wks = castle_Rights.wks
-            self.current_Castling_Right.wqs = castle_Rights.wqs
-            self.current_Castling_Right.bks = castle_Rights.bks
-            self.current_Castling_Right.bqs = castle_Rights.bqs
+            new_Castle_Rights = self.castle_Rights_Log[-1]
+            self.current_Castling_Right = castle_Rights(new_Castle_Rights.wks, new_Castle_Rights.wqs, new_Castle_Rights.bks, new_Castle_Rights.bqs)
 
             if move.castle:
                 if move.end_Col - move.start_Col == 2:
