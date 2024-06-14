@@ -189,11 +189,13 @@ class Gamestate():
             start_Row = 6
             back_Row = 0
             enemy = 'b'
+            king_Row, king_col = self.white_King_Location
         else:
             move_Amount = 1
             start_Row = 1
             back_Row = 7
             enemy = 'w'
+            king_Row, king_col = self.black_King_Location
         pawn_Promotion = False
 
         if self.board[r + move_Amount][c] == "--":
@@ -210,7 +212,25 @@ class Gamestate():
                         pawn_Promotion = True
                     moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, pawn_Promotion = pawn_Promotion))
                 if (r + move_Amount, c - 1) == self.enpassant_Possible:
-                    moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, en_Passant = True))
+                    attacking_Piece = blocking_Piece = False
+                    if king_Row == r:
+                        if king_col < c:
+                            inside_Range = range(king_col + 1, c - 1)
+                            outside_Range = range(c + 1, 8)
+                        else:
+                            inside_Range = range(king_col - 1, c, -1)
+                            outside_Range = range(c - 2, -1, -1)
+                        for i in inside_Range:
+                            if self.board[r][i] != "--":
+                                blocking_Piece = True
+                        for i in outside_Range:
+                            square = self.board[r][i]
+                            if square[0] == enemy and (square[1] == 'R' or square[1] == 'Q'):
+                                attacking_Piece = True
+                            elif square != "--":
+                                blocking_Piece = True
+                    if not attacking_Piece or blocking_Piece:
+                        moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, en_Passant = True))
         if c + 1 <= 7:
             if not piece_Pinned or pin_Direction == (move_Amount, 1):
                 if self.board[r + move_Amount][c + 1][0] == enemy:
@@ -218,7 +238,25 @@ class Gamestate():
                         pawn_Promotion = True
                     moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, pawn_Promotion = pawn_Promotion))
                 if (r + move_Amount, c + 1) == self.enpassant_Possible:
-                    moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, en_Passant = True))
+                    attacking_Piece = blocking_Piece = False
+                    if king_Row == r:
+                        if king_col < c:
+                            inside_Range = range(king_col + 1, c)
+                            outside_Range = range(c + 2, 8)
+                        else:
+                            inside_Range = range(king_col - 1, c + 1, -1)
+                            outside_Range = range(c - 1, -1, -1)
+                        for i in inside_Range:
+                            if self.board[r][i] != "--":
+                                blocking_Piece = True
+                        for i in outside_Range:
+                            square = self.board[r][i]
+                            if square[0] == enemy and (square[1] == 'R' or square[1] == 'Q'):
+                                attacking_Piece = True
+                            elif square != "--":
+                                blocking_Piece = True
+                    if not attacking_Piece or blocking_Piece:
+                        moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, en_Passant = True))
 
     def get_Knight_Moves(self, r, c, moves):
         piece_Pinned = False
