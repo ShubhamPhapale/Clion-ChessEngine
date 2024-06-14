@@ -33,7 +33,7 @@ def main():
     player_Clicks = []
     game_Over = False
     white_Player = True
-    black_Player = False
+    black_Player = True
 
     while running: 
         human_Turn = (gs.whiteToMove and white_Player) or (not gs.whiteToMove and black_Player)
