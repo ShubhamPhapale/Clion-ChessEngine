@@ -1,7 +1,7 @@
 import random
 
 piece_Score = {'K': 0, 'Q': 9, 'R': 5, 'B': 3, 'N': 3, 'P': 1}
-CHECKMATE = 1000
+CHECKMATE = 200
 STALEMATE = 0
 DEPTH = 4
 
