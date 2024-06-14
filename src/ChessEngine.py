@@ -495,6 +495,8 @@ class Move():
         if en_Passant:
             self.piece_Captured = 'bP' if self.piece_Moved == 'wP' else 'wP'
 
+        self.is_Capture = self.piece_Captured != "--"
+
     '''
     overriding the equals method
     '''
@@ -508,3 +510,29 @@ class Move():
     
     def get_Rank_Files(self, row, col):
         return self.Cols_TO_Files[col] + self.rows_TO_Ranks[row]
+    
+    '''
+    overriding the string function
+    '''
+    def __str__(self):
+        if self.castle:
+            return "O-O" if self.end_Col == 6 else "O-O-O"
+        
+        end_Square = self.get_Rank_Files(self.end_Row, self.end_Col)
+
+        if self.piece_Moved[1] == 'P':
+            if self.is_Capture:
+                return self.Cols_TO_Files[self.start_Col] + 'x' + end_Square
+            else:
+                return end_Square
+            
+            # Pawn Promotion d8 = Q
+
+        # if two same type of pieces can move to a square Nbd2 if both knights can move to d2
+
+        # Adding + if Check # if checkmate
+
+        move_String = self.piece_Moved[1]
+        if self.is_Capture:
+            move_String += 'x'
+        return move_String + end_Square
