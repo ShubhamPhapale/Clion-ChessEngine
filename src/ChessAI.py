@@ -6,7 +6,7 @@ import random
 # engine_path = "/opt/homebrew/bin/stockfish"
 # stockfish_engine = chess.engine.SimpleEngine.popen_uci(engine_path)
 
-piece_Score = {'K': 200, 'Q': 9, 'R': 5, 'B': 3, 'N': 3, 'P': 1}
+piece_Score = {'K': 200, 'Q': 9.20, 'R': 5.1, 'B': 3.2, 'N': 2.8, 'P': 1}
 
 white_Pawn_Scores = [
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -109,7 +109,7 @@ piece_Position_Scores = {
 
 CHECKMATE = 10000
 STALEMATE = 0
-DEPTH = 5
+DEPTH = 2
 
 # transposition_table = {}
 
@@ -223,7 +223,7 @@ def score_Board(gs):
     return score
 
 def score_Position(gs):
-    score = 0
+    score = 0.30
     endgame = is_Endgame(gs)
     for row in range(len(gs.board)):
         for col in range(len(gs.board[row])):

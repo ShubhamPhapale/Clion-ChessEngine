@@ -6,6 +6,8 @@ from multiprocessing import Process, Queue
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 256
 MOVE_LOG_PANEL_HEIGHT = BOARD_HEIGHT
+EVAL_BAR_WIDTH = 32
+EVAL_BAR_HEIGHT = BOARD_HEIGHT
 DIMENSION = 8
 SQUARE_SIZE = BOARD_HEIGHT // DIMENSION
 MAX_FPS = 15
@@ -13,6 +15,7 @@ IMAGES = {}
 
 scroll_offset = 0
 scroll_step = 4
+SCROLL_SPEED = 20
 
 def load_Images():
     pieces = ['wP', 'wN', 'wB', 'wR', 'wQ', 'wK', 'bP', 'bN', 'bB', 'bR', 'bQ', 'bK']
@@ -25,7 +28,7 @@ def main():
     # manager = multiprocessing.Manager() # multiprocessing.Manager()
     # transposition_table = manager.dict()
 
-    screen = p.display.set_mode((BOARD_WIDTH + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT))
+    screen = p.display.set_mode((+ EVAL_BAR_WIDTH + BOARD_WIDTH  + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     move_Log_Font = p.font.SysFont("Arial", 16, True, False)
@@ -53,7 +56,7 @@ def main():
             elif e.type == p.MOUSEBUTTONDOWN:
                 if not game_Over:
                     location = p.mouse.get_pos()
-                    col = location[0] // SQUARE_SIZE
+                    col = (location[0] - EVAL_BAR_WIDTH) // SQUARE_SIZE
                     row = location[1] // SQUARE_SIZE
                     if square_Selected == (row, col) or col > 7:
                         square_Selected = ()
@@ -104,7 +107,7 @@ def main():
                 return_Queue = Queue()
                 move_Finder_Process = Process(target = ChessAI.find_Best_Move, args = (gs, valid_Moves, return_Queue)) # , transposition_table
                 move_Finder_Process.start()
-                move_Finder_Process.join()
+                # move_Finder_Process.join()
 
             if not move_Finder_Process.is_alive():  
                 AI_Move = return_Queue.get()
@@ -124,7 +127,8 @@ def main():
             animate = False
             move_Undone = False
 
-        draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font)
+        eval_Score = ChessAI.score_Board(gs)
+        draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font, eval_Score)
 
         if gs.checkmate or gs.stalemate:
             game_Over = True
@@ -134,19 +138,20 @@ def main():
         clock.tick(MAX_FPS)
         p.display.flip()
 
-def draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font):
+def draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font, eval_Score):
     draw_Board(screen)
     highlight_Squares(screen, gs, valid_Moves, square_Selected)
     draw_Pieces(screen, gs.board)
+    draw_Evaluation_Bar(screen, eval_Score)
     draw_Move_Log(screen, gs, move_Log_Font)
 
 def draw_Board(screen):
     global colors 
-    colors = [p.Color("light gray"), p.Color("dark green")]
+    colors = [p.Color("light gray"), (153,102,51)]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[(r+c)%2]
-            p.draw.rect(screen, color, p.Rect(c*SQUARE_SIZE, r*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            p.draw.rect(screen, color, p.Rect(EVAL_BAR_WIDTH + c*SQUARE_SIZE, r*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 def highlight_Squares(screen, gs, valid_Moves, square_Selected):
     if square_Selected != ():
@@ -155,23 +160,23 @@ def highlight_Squares(screen, gs, valid_Moves, square_Selected):
             s = p.Surface((SQUARE_SIZE, SQUARE_SIZE))
             s.set_alpha(100)
             s.fill(p.Color("blue"))
-            screen.blit(s, (c * SQUARE_SIZE, r * SQUARE_SIZE))
+            screen.blit(s, (EVAL_BAR_WIDTH + c * SQUARE_SIZE, r * SQUARE_SIZE))
             s.fill(p.Color("yellow"))
             for move in valid_Moves:
                 if move.start_Row == r and move.start_Col == c:
-                    screen.blit(s, (move.end_Col * SQUARE_SIZE, move.end_Row * SQUARE_SIZE))
+                    screen.blit(s, (EVAL_BAR_WIDTH + move.end_Col * SQUARE_SIZE, move.end_Row * SQUARE_SIZE))
 
 def draw_Pieces(screen, board):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r][c]
             if piece != "--":
-                screen.blit(IMAGES[piece], p.Rect(c*SQUARE_SIZE, r*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+                screen.blit(IMAGES[piece], p.Rect(EVAL_BAR_WIDTH + c*SQUARE_SIZE, r*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 def draw_Move_Log(screen, gs, font):
     global scroll_offset
-    move_Log_Rect = p.Rect(BOARD_WIDTH, 0, MOVE_LOG_PANEL_WIDTH, MOVE_LOG_PANEL_HEIGHT)
-    p.draw.rect(screen, p.Color("black"), move_Log_Rect)
+    move_Log_Rect = p.Rect(BOARD_WIDTH + EVAL_BAR_WIDTH, 0, MOVE_LOG_PANEL_WIDTH, MOVE_LOG_PANEL_HEIGHT)
+    p.draw.rect(screen, (51, 34, 17), move_Log_Rect)
     moveLog = gs.moveLog
     move_Texts = []
     for i in range(0, len(moveLog), 2):
@@ -207,6 +212,24 @@ def draw_Move_Log(screen, gs, font):
     max_scroll_offset = max(0, total_Text_Height - MOVE_LOG_PANEL_HEIGHT)
     scroll_offset = min(scroll_offset, max_scroll_offset)
 
+    scrollEVAL_BAR_WIDTH = 10
+
+    if total_Text_Height > MOVE_LOG_PANEL_HEIGHT:
+        scrollEVAL_BAR_HEIGHT = int(MOVE_LOG_PANEL_HEIGHT * (MOVE_LOG_PANEL_HEIGHT / total_Text_Height))
+        scrollbar_position = int((MOVE_LOG_PANEL_HEIGHT - scrollEVAL_BAR_HEIGHT) * (scroll_offset / max_scroll_offset))
+        scrollbar_rect = p.Rect(BOARD_WIDTH + EVAL_BAR_WIDTH + MOVE_LOG_PANEL_WIDTH - padding - scrollEVAL_BAR_WIDTH, scrollbar_position, scrollEVAL_BAR_WIDTH, scrollEVAL_BAR_HEIGHT)
+        p.draw.rect(screen, p.Color("black"), scrollbar_rect)
+
+        mouse_x, mouse_y = p.mouse.get_pos()
+        scrollbar_area = p.Rect(BOARD_WIDTH + EVAL_BAR_WIDTH + MOVE_LOG_PANEL_WIDTH - padding - scrollEVAL_BAR_WIDTH, 0, scrollEVAL_BAR_WIDTH, MOVE_LOG_PANEL_HEIGHT)
+        
+        if p.mouse.get_pressed()[0]:  
+            if scrollbar_area.collidepoint(mouse_x, mouse_y):
+                delta_y = mouse_y - scrollbar_position
+                scroll_offset += int(delta_y / scrollEVAL_BAR_HEIGHT * max_scroll_offset)
+        
+        scroll_offset = max(0, min(scroll_offset, max_scroll_offset))
+
 def animate_Move(move, screen, board, clock):
     global colors
     dR = move.end_Row - move.start_Row
@@ -218,25 +241,50 @@ def animate_Move(move, screen, board, clock):
         draw_Board(screen)
         draw_Pieces(screen, board)
         color = colors[(move.end_Row + move.end_Col) % 2]
-        end_Square = p.Rect(move.end_Col * SQUARE_SIZE, move.end_Row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
+        end_Square = p.Rect(EVAL_BAR_WIDTH + move.end_Col * SQUARE_SIZE, move.end_Row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
         p.draw.rect(screen, color, end_Square)
         if move.piece_Captured != "--":
             if move.en_Passant:
                 en_Passant_Row = move.end_Row + 1 if move.piece_Captured[0] == 'b' else move.end_Row - 1
-                end_Square = p.Rect(move.end_Col * SQUARE_SIZE, en_Passant_Row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
+                end_Square = p.Rect(EVAL_BAR_WIDTH + move.end_Col * SQUARE_SIZE, en_Passant_Row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
             screen.blit(IMAGES[move.piece_Captured], end_Square)
         if move.piece_Moved != "--":
-            screen.blit(IMAGES[move.piece_Moved], p.Rect(c * SQUARE_SIZE, r * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            screen.blit(IMAGES[move.piece_Moved], p.Rect(EVAL_BAR_WIDTH + c * SQUARE_SIZE, r * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
         p.display.flip()
         clock.tick(60)
 
 def draw_Game_Ended_Text(screen, text):
     font = p.font.SysFont("Helvitca", 32, True, False)
     text_Object = font.render(text, 0, p.Color("Gray"))
-    text_Location = p.Rect(0, 0, BOARD_WIDTH, BOARD_HEIGHT).move(BOARD_WIDTH / 2 - text_Object.get_width() / 2, BOARD_HEIGHT / 2 - text_Object.get_height() / 2)
+    text_Location = p.Rect(EVAL_BAR_WIDTH, 0, BOARD_WIDTH, BOARD_HEIGHT).move(BOARD_WIDTH / 2 - text_Object.get_width() / 2, BOARD_HEIGHT / 2 - text_Object.get_height() / 2)
     screen.blit(text_Object, text_Location)
     text_Object = font.render(text, 0, p.Color("Black"))
     screen.blit(text_Object, text_Location.move(2, 2))
+
+def draw_Evaluation_Bar(screen, eval_score):
+    max_score = 20  # Adjust this based on your evaluation range
+    
+   # Calculate the lengths of white and black parts of the bar
+    if max_score != 0:
+        white_part = EVAL_BAR_HEIGHT / 2
+        white_part += int((eval_score) / max_score * EVAL_BAR_HEIGHT)
+        black_part = EVAL_BAR_HEIGHT - white_part
+    else:
+        white_part = EVAL_BAR_HEIGHT / 2
+        black_part = EVAL_BAR_HEIGHT / 2
+    
+    # Draw the white part of the bar
+    white_rect = p.Rect(0, 0 + black_part, EVAL_BAR_WIDTH, white_part)
+    p.draw.rect(screen, p.Color("white"), white_rect)
+    
+    # Draw the black part of the bar
+    black_rect = p.Rect(0, 0, EVAL_BAR_WIDTH, black_part)
+    p.draw.rect(screen, p.Color("black"), black_rect)
+
+    font = p.font.Font(None, 20)
+    text = font.render(f"{eval_score:.1f}", False, p.Color("black"))
+    text_rect = text.get_rect(center=(EVAL_BAR_WIDTH // 2, BOARD_HEIGHT - 16))
+    screen.blit(text, text_rect)
 
 def handle_move_log_scroll(event):
     global scroll_offset
