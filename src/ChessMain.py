@@ -1,6 +1,7 @@
 import pygame as p;
 import ChessEngine, ChessAI
 from multiprocessing import Process, Queue
+# import multiprocessing
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 256
@@ -20,6 +21,10 @@ def load_Images():
 
 def main():
     p.init()
+
+    # manager = multiprocessing.Manager() # multiprocessing.Manager()
+    # transposition_table = manager.dict()
+
     screen = p.display.set_mode((BOARD_WIDTH + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
@@ -33,7 +38,7 @@ def main():
     square_Selected = ()
     player_Clicks = []
     game_Over = False
-    white_Player = False
+    white_Player = True
     black_Player = False
     AI_Thinking = False
     move_Finder_Process = None
@@ -97,8 +102,9 @@ def main():
             if not AI_Thinking:
                 AI_Thinking = True
                 return_Queue = Queue()
-                move_Finder_Process = Process(target = ChessAI.find_Best_Move, args = (gs, valid_Moves, return_Queue))
+                move_Finder_Process = Process(target = ChessAI.find_Best_Move, args = (gs, valid_Moves, return_Queue)) # , transposition_table
                 move_Finder_Process.start()
+                move_Finder_Process.join()
 
             if not move_Finder_Process.is_alive():  
                 AI_Move = return_Queue.get()
@@ -112,7 +118,7 @@ def main():
         if move_Made:
             if animate:
                 animate_Move(gs.moveLog[-1], screen, gs.board, clock)
-                print("Move made:", gs.moveLog[-1].get_Chess_Notation())
+                print("Move made:", str(gs.moveLog[-1]))
             valid_Moves = gs.get_Valid_Moves()
             move_Made = False
             animate = False
