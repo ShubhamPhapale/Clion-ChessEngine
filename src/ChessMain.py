@@ -1,4 +1,5 @@
-import pygame as p;
+import pygame as p
+import math
 import ChessEngine, ChessAI
 from multiprocessing import Process, Queue
 # import multiprocessing
@@ -42,7 +43,7 @@ def main():
     player_Clicks = []
     game_Over = False
     white_Player = True
-    black_Player = False
+    black_Player = True
     AI_Thinking = False
     move_Finder_Process = None
     move_Undone = False
@@ -194,9 +195,9 @@ def draw_Move_Log(screen, gs, font):
     move_Part_Width = 112
 
     for initial_part, white_move, black_move in move_Texts:
-        initial_part_text = font.render(initial_part, True, p.Color("light gray"))
-        white_move_text = font.render(white_move, True, p.Color("light gray"))
-        black_move_text = font.render(black_move, True, p.Color("light gray"))
+        initial_part_text = font.render(initial_part, True, p.Color("white"))
+        white_move_text = font.render(white_move, True, p.Color("white"))
+        black_move_text = font.render(black_move, True, p.Color("white"))
         
         initial_part_location = move_Log_Rect.move(padding + line_Spacing, text_Y)
         white_move_location = move_Log_Rect.move(padding + line_Spacing + initial_Part_Width, text_Y)
@@ -218,7 +219,7 @@ def draw_Move_Log(screen, gs, font):
         scrollEVAL_BAR_HEIGHT = int(MOVE_LOG_PANEL_HEIGHT * (MOVE_LOG_PANEL_HEIGHT / total_Text_Height))
         scrollbar_position = int((MOVE_LOG_PANEL_HEIGHT - scrollEVAL_BAR_HEIGHT) * (scroll_offset / max_scroll_offset))
         scrollbar_rect = p.Rect(BOARD_WIDTH + EVAL_BAR_WIDTH + MOVE_LOG_PANEL_WIDTH - padding - scrollEVAL_BAR_WIDTH, scrollbar_position, scrollEVAL_BAR_WIDTH, scrollEVAL_BAR_HEIGHT)
-        p.draw.rect(screen, p.Color("black"), scrollbar_rect)
+        p.draw.rect(screen, (87,80,77), scrollbar_rect)
 
         mouse_x, mouse_y = p.mouse.get_pos()
         scrollbar_area = p.Rect(BOARD_WIDTH + EVAL_BAR_WIDTH + MOVE_LOG_PANEL_WIDTH - padding - scrollEVAL_BAR_WIDTH, 0, scrollEVAL_BAR_WIDTH, MOVE_LOG_PANEL_HEIGHT)
@@ -262,28 +263,23 @@ def draw_Game_Ended_Text(screen, text):
     screen.blit(text_Object, text_Location.move(2, 2))
 
 def draw_Evaluation_Bar(screen, eval_score):
-    max_score = 20  # Adjust this based on your evaluation range
+    max_score = 20  
+    eval_score_log = math.log1p(abs(1e-9 + eval_score)) # log1p(x) = log(1 + x)
+    sign = 1 if eval_score >= 0 else -1
     
-   # Calculate the lengths of white and black parts of the bar
-    if max_score != 0:
-        white_part = EVAL_BAR_HEIGHT / 2
-        white_part += int((eval_score) / max_score * EVAL_BAR_HEIGHT)
-        black_part = EVAL_BAR_HEIGHT - white_part
-    else:
-        white_part = EVAL_BAR_HEIGHT / 2
-        black_part = EVAL_BAR_HEIGHT / 2
-    
-    # Draw the white part of the bar
-    white_rect = p.Rect(0, 0 + black_part, EVAL_BAR_WIDTH, white_part)
+    white_part = EVAL_BAR_HEIGHT / 2 + sign * (eval_score_log / math.log2(math.e * max_score)) * (EVAL_BAR_HEIGHT)
+    black_part = EVAL_BAR_HEIGHT - white_part
+ 
+    white_rect = p.Rect(0, black_part, EVAL_BAR_WIDTH, white_part)
     p.draw.rect(screen, p.Color("white"), white_rect)
-    
-    # Draw the black part of the bar
+ 
     black_rect = p.Rect(0, 0, EVAL_BAR_WIDTH, black_part)
     p.draw.rect(screen, p.Color("black"), black_rect)
 
-    font = p.font.Font(None, 20)
-    text = font.render(f"{eval_score:.1f}", False, p.Color("black"))
-    text_rect = text.get_rect(center=(EVAL_BAR_WIDTH // 2, BOARD_HEIGHT - 16))
+    font = p.font.Font(None, 22)
+    color, y_co, eval_score = (p.Color("black"), EVAL_BAR_HEIGHT - 10, eval_score) if eval_score >= 0 else (p.Color("white"), 10, -eval_score)
+    text = font.render('M', True, color) if abs(eval_score) > max_score else font.render(f"{eval_score:.1f}", True, color)
+    text_rect = text.get_rect(center=(EVAL_BAR_WIDTH // 2, y_co))
     screen.blit(text, text_rect)
 
 def handle_move_log_scroll(event):
