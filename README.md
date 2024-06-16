@@ -17,10 +17,23 @@ Clion is a Chess Engine developed in Python. It is an attempt to develop an Engi
 - [ ] Draw by three Fold Repetition or by 50 moves rule
 
 ## Instructions
-1. Clone this repository.
-2. Execute command `pip install requirements.txt`
-3. Change directory to `src` by executing `cd src`
-3. Execute Command `python ChessMain.py`
+1.  **Clone the Repository**:
+   ```bash
+   https://github.com/ShubhamPhapale/Clion-ChessEngine.git
+
+   ```
+2. **Execute command** 
+   ```bash
+   pip3 install requirements.txt
+   ```
+3. Change directory to `src`:
+   ```bash
+   cd src
+   ```
+3. **Execute Command**:
+   ```bash
+   python chessmain.py
+   ```
 4. Note : You can select Human / AI to play in the ChessMain.py by setting boolean flags for whiteplayer / blackplayer
 
 #### Handling:
