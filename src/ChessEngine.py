@@ -504,7 +504,57 @@ class Gamestate():
                     self.current_Castling_Right.bks = False
                 elif move.end_Col == 0:
                     self.current_Castling_Right.bqs = False
+    
+    def board_to_fen(self):
+        def get_castling_rights():
+            rights = ""
+            if self.current_Castling_Right.wks:
+                rights += "K"
+            if self.current_Castling_Right.wqs:
+                rights += "Q"
+            if self.current_Castling_Right.bks:
+                rights += "k"
+            if self.current_Castling_Right.bqs:
+                rights += "q"
+            return rights if rights else "-"
 
+        def get_en_passant_target():
+            if self.enpassant_Possible != ():
+                move = Move((0, 0), self.enpassant_Possible, self.board) #demo move
+                return move.get_Rank_Files(self.enpassant_Possible[0], self.enpassant_Possible[1])
+            else:
+                return "-"
+
+        fen = ""
+        for row in self.board:
+            empty_count = 0
+            for piece in row:
+                if piece == "--":
+                    empty_count += 1
+                else:
+                    if empty_count > 0:
+                        fen += str(empty_count)
+                        empty_count = 0
+                    fen += piece[1].lower() if piece[0] == 'b' else piece[1].upper()
+            if empty_count > 0:
+                fen += str(empty_count)
+            fen += "/"
+        fen = fen[:-1]  # Remove the last "/"
+        
+        # Add the side to move
+        fen += " w" if self.whiteToMove else " b"
+        
+        # Add castling rights
+        fen += " " + get_castling_rights()
+        
+        # Add en passant target square
+        fen += " " + get_en_passant_target()
+        
+        # Add halfmove clock and fullmove number (simplified here)
+        fen += " 0 1"
+        
+        return fen
+    
 class castle_Rights():
     def __init__(self, wks, wqs, bks, bqs):
         self.wks = wks
@@ -555,22 +605,42 @@ class Move():
     def __str__(self):
         if self.castle:
             return "O-O" if self.end_Col == 6 else "O-O-O"
-        
+
         end_Square = self.get_Rank_Files(self.end_Row, self.end_Col)
 
         if self.piece_Moved[1] == 'P':
+            # if self.pawn_Promotion:
+            #     return end_Square + "=" + 'Q' # self.piece_Moved[1]
             if self.is_Capture:
                 return self.Cols_TO_Files[self.start_Col] + 'x' + end_Square
             else:
                 return end_Square
-            
-            # Pawn Promotion d8 = Q
-
-        # if two same type of pieces can move to a square Nbd2 if both knights can move to d2
-
-        # Adding + if Check # if checkmate
 
         move_String = self.piece_Moved[1]
+
+        # Check for disambiguation
+        # if self.piece_Moved[1] != 'P':  # Exclude pawns
+        #     same_type_moves = [move for move in valid_Moves if move.piece_Moved == self.piece_Moved and move != self]
+
+        #     if same_type_moves:
+        #         disambiguation_needed = False
+        #         for move in same_type_moves:
+        #             if move.end_Row == self.end_Row and move.end_Col == self.end_Col:
+        #                 disambiguation_needed = True
+        #                 break
+        #         if disambiguation_needed:
+        #             if self.start_Col != self.end_Col:
+        #                 move_String += self.Cols_TO_Files[self.start_Col]
+        #             else:
+        #                 move_String += self.rows_TO_Ranks[self.start_Row]
+
         if self.is_Capture:
             move_String += 'x'
-        return move_String + end_Square
+
+        move_String += end_Square
+
+        # Check and Checkmate
+        # Implement your check and checkmate logic here based on the game state
+
+        return move_String
+

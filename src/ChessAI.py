@@ -1,108 +1,102 @@
 import random
 
-piece_Score = {'K': 20, 'Q': 9, 'R': 5, 'B': 3, 'N': 3, 'P': 1}
+piece_Score = {'K': 9999, 'Q': 920, 'R': 510, 'B': 320, 'N': 280, 'P': 100}
 
-white_Pawn_Scores = [
-        [15, 15, 15, 15, 15, 15, 15, 15],
-        [8, 8, 8, 8, 8, 8, 8, 8],
-        [4, 4, 4, 4, 4, 4, 4, 4],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [2, 1, 2, 3, 3, 2, 1, 2],
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        ]
-
-black_Pawn_Scores = [
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        [2, 2, 2, 2, 2, 2, 2, 2],
-        [3, 3, 3, 4, 4, 3, 3, 3],
-        [4, 3, 4, 5, 5, 4, 3, 4],
-        [5, 5, 5, 5, 5, 5, 5, 5],
-        [7, 7, 7, 7, 7, 7, 7, 7],
-        [8, 8, 8, 8, 8, 8, 8, 8],
-        [10, 10, 10, 10, 10, 10, 10, 10],
+pawn_Scores = [
+    [ 0,   0,   0,   0,   0,   0,   0,   0,],
+    [78,  83,  86,  73, 102,  82,  85,  90],
+    [ 7,  29,  21,  44,  40,  31,  44,   7],
+    [-17,  16,  -2,  15,  14,   0,  15, -13],
+    [-26,   3,  10,   9,   6,   1,   0, -23],
+    [-22,   9,   5, -11, -10,  -2,   3, -19],
+    [-31,   8,  -7, -37, -36, -14,   3, -31],
+    [0.0, 0.1, 0.2, 0.2, 0.2, 0.2, 0.1, 0.0]
     ]
 
 knight_Scores = [
-        [-1, -1, -1, -1, -1, -1, -1, -1],
-        [-1, 0, 0, 0, 0, 0, 0, -1],
-        [-1, 0, 1, 1, 1, 1, 0, -1],
-        [-1, 0, 1, 2, 2, 1, 0, -1],
-        [-1, 0, 1, 2, 2, 1, 0, -1],
-        [-1, 0, 1, 1, 1, 1, 0, -1],
-        [-1, 0, 0, 0, 0, 0, 0, -1],
-        [-1, -1, -1, -1, -1, -1, -1, -1]
-        ]
+    [-66, -53, -75, -75, -10, -55, -58, -70],
+    [-3, -6, 100, -36, 4, 62, -4, -14],
+    [10, 67, 1, 74, 73, 27, 62, -2],
+    [24, 24, 45, 37, 33, 41, 25, 17],
+    [-1, 5, 31, 21, 22, 35, 2, 0],
+    [-18, 10, 13, 22, 18, 15, 11, -14],
+    [-23, -15, 2, 0, 2, 0, -23, -20],
+    [-66, -53, -75, -75, -10, -55, -58, -70]
+    ]
 
 bishop_Scores = [
-        [3, 2, 1, 0, 0, 1, 2, 3],
-        [2, 3, 2, 1, 1, 2, 3, 2],
-        [1, 2, 3, 2, 2, 3, 2, 1],
-        [0, 1, 2, 3, 3, 2, 1, 0],
-        [0, 1, 2, 3, 3, 2, 1, 0],
-        [1, 2, 3, 2, 2, 3, 2, 1],
-        [2, 3, 2, 1, 1, 2, 3, 2],
-        [3, 2, 3, 0, 0, 1, 2, 3]
-        ]
+    [-59, -78, -82, -76, -23, -107, -37, -50],
+    [-11, 20, 35, -42, -39, 31, 2, -22],
+    [-9, 39, -32, 41, 52, -10, 28, -14],
+    [25, 17, 20, 34, 26, 25, 15, 10],
+    [13, 10, 17, 23, 17, 16, 0, 7],
+    [14, 25, 24, 15, 8, 25, 20, 15],
+    [19, 20, 11, 6, 7, 6, 20, 16],
+    [-7, 2, -15, -12, -14, -15, -10, -10]
+    ]
 
-white_Rook_Scores = [
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 2, 1, 1, 2, 0, 0],
-        ]
-
-black_Rook_Scores = [
-        [0, 0, 2, 1, 1, 2, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [1, 1, 2, 2, 2, 2, 1, 1],
-        [3, 3, 3, 3, 3, 3, 3, 3],
-        [1, 1, 1, 1, 1, 1, 1, 1],
-        ]
+rook_Scores = [
+    [35,  29,  33,   4,  37,  33,  56,  50],
+    [55,  29,  56,  67,  55,  62,  34,  60],
+    [19,  35,  28,  33,  45,  27,  25,  15],
+    [0,    5,  16,  13,  18,  -4,  -9,  -6],
+    [-28, -35, -16, -21, -13, -29, -46, -30],
+    [-42, -28, -42, -25, -25, -35, -26, -46],
+    [-53, -38, -31, -26, -29, -43, -44, -53],
+    [-30, -24, -18,   5,  -2, -18, -31, -32]
+    ]
 
 queen_Scores = [
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 2, 2, 2, 2, 1, 0],
-        [0, 1, 2, 3, 3, 2, 1, 0],
-        [0, 1, 2, 3, 3, 2, 1, 0],
-        [0, 1, 2, 2, 2, 2, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0]
-        ]
+    [  6,   1,  -8, -104,  69,  24,  88,  26],
+    [ 14,  32,  60,  -10,  20,  76,  57,  24],
+    [ -2,  43,  32,   60,  72,  63,  43,   2],
+    [  1, -16,  22,   17,  25,  20, -13,  -6],
+    [ -14, -15,  -2,   -5,  -1, -10, -20, -22],
+    [ -30,  -6, -13,  -11, -16, -11, -16, -27],
+    [ -36, -18,   0,  -19, -15, -15, -21, -38],
+    [ -39, -30, -31,  -13, -31, -36, -34, -42]
+    ]
+
 white_King_Scores = [
-    [1, 1, 1, 0, 0, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 3, 3, 0, 0, 1, 3, 1],
-    ]
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-20, -30, -30, -40, -40, -30, -30, -20],
+    [-10, -20, -20, -20, -20, -20, -20, -10],
+    [20, 20, 0, 0, 0, 0, 20, 20],
+    [20, 30, 10, 0, 0, 10, 30, 20]
+]
 
-black_King_Scores = [
-    [1, 3, 3, 0, 0, 1, 3, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    ]
+white_King_Endgame_Scores = [
+    [-50, -40, -30, -20, -20, -30, -40, -50],
+    [-30, -20, -10, 0, 0, -10, -20, -30],
+    [-30, -10, 20, 30, 30, 20, -10, -30],
+    [-30, -10, 30, 40, 40, 30, -10, -30],
+    [-30, -10, 30, 40, 40, 30, -10, -30],
+    [-30, -10, 20, 30, 30, 20, -10, -30],
+    [-30, -30, 0, 0, 0, 0, -30, -30],
+    [-50, -30, -30, -30, -30, -30, -30, -50]
+]
 
-piece_Position_Scores = {'wP': white_Pawn_Scores, 'bP': black_Pawn_Scores, 'N': knight_Scores, 'B': bishop_Scores, 'wR': white_Rook_Scores, 'bR': black_Rook_Scores, 'Q': queen_Scores, 'wK': white_King_Scores, 'bK': black_King_Scores}
+piece_Position_Scores = {
+    "wP": pawn_Scores,
+    "bP": pawn_Scores[::-1],
+    "wN": knight_Scores,
+    "bN": knight_Scores[::-1],
+    "wB": bishop_Scores,
+    "bB": bishop_Scores[::-1],
+    "wR": rook_Scores,
+    "bR": rook_Scores[::-1],
+    "wQ": queen_Scores,
+    "bQ": queen_Scores[::-1],
+    'wK': white_King_Scores,
+    'bK': white_King_Scores[::-1],
+    'wK_end': white_King_Endgame_Scores,
+    'bK_end': white_King_Endgame_Scores[::-1]
+}
 
-CHECKMATE = 200
+CHECKMATE = 100000
 STALEMATE = 0
 DEPTH = 5
 
@@ -110,21 +104,24 @@ def find_Random_Move(valid_Moves):
     return valid_Moves[random.randint(0, len(valid_Moves) - 1)]
 
 def find_Best_Move(gs, valid_Moves, return_Queue):
-    global next_Move, nodes
+    global next_Move, nodes 
     next_Move = None
     random.shuffle(valid_Moves)
     nodes = 0
-    find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gs.whiteToMove else -1)
+    next_eval = find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gs.whiteToMove else -1)
     print("Nodes Visited:", nodes)
+    next_eval = next_eval if gs.whiteToMove else -next_eval
     return_Queue.put(next_Move)
+    return_Queue.put(next_eval)
 
 def find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, depth, alpha, beta, turn):
     global next_Move, nodes
     nodes += 1
     if depth == 0:
         return score_Board(gs) * turn
+
+    valid_Moves.sort(key=lambda move: piece_Score.get(move.piece_Captured[1], 0) if move.is_Capture else 0, reverse=True)
     
-    # implement move ordering here later
     max_Score = -CHECKMATE
     for move in valid_Moves:
         gs.make_Move(move)
@@ -134,14 +131,18 @@ def find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, depth, alpha, beta, turn):
             max_Score = score
             if depth == DEPTH:
                 next_Move = move
-                print("Current Best Move is", next_Move.get_Chess_Notation(), "with score", max_Score)
+                print(str(next_Move), "% .2f" % max_Score, "at depth", DEPTH)
         gs.undo_Move()
         if max_Score > alpha:
             alpha = max_Score
         if alpha >= beta:
             break
+
+    if gs.stalemate: 
+        max_Score = STALEMATE
+
     return max_Score
-    
+
 def score_Board(gs):
     if gs.checkmate:
         if gs.whiteToMove:
@@ -150,29 +151,33 @@ def score_Board(gs):
             return CHECKMATE
     elif gs.stalemate:
         return STALEMATE
-    
-    score = score_Position(gs)
-    return score
 
+    score = score_Position(gs)
+    return score / 100
 
 def score_Position(gs):
     score = 0
+    endgame = is_Endgame(gs)
     for row in range(len(gs.board)):
         for col in range(len(gs.board[row])):
             square = gs.board[row][col]
             if square != "--":
                 piece_Position_Score = 0
-                if square[1] == 'P':
-                    piece_Position_Score = piece_Position_Scores[square][row][col]
-                elif square[1] == 'R':
-                    piece_Position_Score = piece_Position_Scores[square][row][col]
-                elif square[1] == 'K':
-                    piece_Position_Score = piece_Position_Scores[square][row][col]
+                if square[1] == 'K':
+                    if endgame:
+                        piece_Position_Score = piece_Position_Scores[square + '_end'][row][col]
+                    else:
+                        piece_Position_Score = piece_Position_Scores[square][row][col]
                 else:
-                    piece_Position_Score = piece_Position_Scores[square[1]][row][col]
+                    piece_Position_Score = piece_Position_Scores[square][row][col]
 
                 if square[0] == 'w':
-                    score += piece_Score[square[1]] + piece_Position_Score * 0.1
+                    score += piece_Score[square[1]] + piece_Position_Score
                 elif square[0] == 'b':
-                    score -= piece_Score[square[1]] + piece_Position_Score * 0.1
+                    score -= piece_Score[square[1]] + piece_Position_Score
     return score
+
+def is_Endgame(gs):
+    """ Determine if the game is in the endgame phase """
+    totalMaterial = sum(piece_Score[piece[1]] for row in gs.board for piece in row if (piece != "--" and piece[1] != 'K'))
+    return totalMaterial < 3000 
