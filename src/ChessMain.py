@@ -2,7 +2,6 @@ import pygame as p
 import math
 import ChessEngine, ChessAI
 from multiprocessing import Process, Queue
-# import multiprocessing
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 256
@@ -25,10 +24,6 @@ def load_Images():
 
 def main():
     p.init()
-
-    # manager = multiprocessing.Manager() # multiprocessing.Manager()
-    # transposition_table = manager.dict()
-
     screen = p.display.set_mode((+ EVAL_BAR_WIDTH + BOARD_WIDTH  + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
@@ -42,11 +37,14 @@ def main():
     square_Selected = ()
     player_Clicks = []
     game_Over = False
-    white_Player = True
+    white_Player = False
     black_Player = True
     AI_Thinking = False
     move_Finder_Process = None
     move_Undone = False
+
+    global eval_Score
+    eval_Score = 0.15
 
     while running: 
         human_Turn = (gs.whiteToMove and white_Player) or (not gs.whiteToMove and black_Player)
@@ -101,17 +99,17 @@ def main():
                         move_Finder_Process.terminate()
                         AI_Thinking = False
                     move_Undone = True
-
+    
         if not game_Over and not human_Turn and not move_Made and not move_Undone:
             if not AI_Thinking:
                 AI_Thinking = True
                 return_Queue = Queue()
-                move_Finder_Process = Process(target = ChessAI.find_Best_Move, args = (gs, valid_Moves, return_Queue)) # , transposition_table
+                move_Finder_Process = Process(target = ChessAI.find_Best_Move, args = (gs, valid_Moves, return_Queue))
                 move_Finder_Process.start()
-                # move_Finder_Process.join()
 
             if not move_Finder_Process.is_alive():  
                 AI_Move = return_Queue.get()
+                eval_Score = return_Queue.get()
                 if AI_Move is None:
                     AI_Move = ChessAI.find_Random_Move(valid_Moves)
                 gs.make_Move(AI_Move)
@@ -128,8 +126,7 @@ def main():
             animate = False
             move_Undone = False
 
-        eval_Score = ChessAI.score_Board(gs)
-        draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font, eval_Score)
+        draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font)
 
         if gs.checkmate or gs.stalemate:
             game_Over = True
@@ -139,11 +136,11 @@ def main():
         clock.tick(MAX_FPS)
         p.display.flip()
 
-def draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font, eval_Score):
+def draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font):
     draw_Board(screen)
     highlight_Squares(screen, gs, valid_Moves, square_Selected)
     draw_Pieces(screen, gs.board)
-    draw_Evaluation_Bar(screen, eval_Score)
+    draw_Evaluation_Bar(screen)
     draw_Move_Log(screen, gs, move_Log_Font)
 
 def draw_Board(screen):
@@ -262,24 +259,25 @@ def draw_Game_Ended_Text(screen, text):
     text_Object = font.render(text, 0, p.Color("Black"))
     screen.blit(text_Object, text_Location.move(2, 2))
 
-def draw_Evaluation_Bar(screen, eval_score):
+def draw_Evaluation_Bar(screen):
+    global eval_Score
     max_score = 20  
-    eval_score_log = math.log1p(abs(1e-9 + eval_score)) # log1p(x) = log(1 + x)
-    sign = 1 if eval_score >= 0 else -1
-    
+    eval_score_log = math.log1p(abs(1e-9 + eval_Score))
+    sign = 1 if eval_Score >= 0 else -1
+
     white_part = EVAL_BAR_HEIGHT / 2 + sign * (eval_score_log / math.log2(math.e * max_score)) * (EVAL_BAR_HEIGHT)
     black_part = EVAL_BAR_HEIGHT - white_part
  
-    white_rect = p.Rect(0, black_part, EVAL_BAR_WIDTH, white_part)
-    p.draw.rect(screen, p.Color("white"), white_rect)
+    white_rect = p.Rect(0, black_part, EVAL_BAR_WIDTH , white_part)
+    p.draw.rect(screen, (221,216,213), white_rect)
  
     black_rect = p.Rect(0, 0, EVAL_BAR_WIDTH, black_part)
-    p.draw.rect(screen, p.Color("black"), black_rect)
+    p.draw.rect(screen, (48,42,39), black_rect)
 
     font = p.font.Font(None, 22)
-    color, y_co, eval_score = (p.Color("black"), EVAL_BAR_HEIGHT - 10, eval_score) if eval_score >= 0 else (p.Color("white"), 10, -eval_score)
-    text = font.render('M', True, color) if abs(eval_score) > max_score else font.render(f"{eval_score:.1f}", True, color)
-    text_rect = text.get_rect(center=(EVAL_BAR_WIDTH // 2, y_co))
+    color, y_co, plot_Score = (p.Color("black"), EVAL_BAR_HEIGHT - 10, eval_Score) if eval_Score >= 0 else (p.Color("white"), 10, -eval_Score)
+    text = font.render('M', True, color) if abs(plot_Score) > max_score else font.render(f"{plot_Score:.1f}", True, color)
+    text_rect = text.get_rect(center=((EVAL_BAR_WIDTH ) // 2, y_co))
     screen.blit(text, text_rect)
 
 def handle_move_log_scroll(event):
