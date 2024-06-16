@@ -31,7 +31,7 @@ Clion is a Chess Engine developed in Python. It is an attempt to develop an Engi
    ```
 3. **Execute Command**:
    ```bash
-   python chessmain.py
+   python ChessMain.py
    ```
 Note : You can select Human / AI to play in the ChessMain.py by setting boolean flags for whiteplayer / blackplayer
 
