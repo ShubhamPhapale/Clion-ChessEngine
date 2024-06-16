@@ -7,7 +7,7 @@
 
 
 ## General info
-Clion is a Chess Engine developed in Python. It is an attempt to develop an Engine which can play at `FIDE` Rating of `2000+`, currently it plays aproximately at `1500 ELO`. Current Improvement areas include efficiently calculating moves which can give fruitfull results and hence can be helpful to increase Engine's `DEPTH` of calculating moves.
+Clion is a Chess Engine developed in Python. It is an attempt to develop an Engine which can play at `FIDE` Rating of `2000+` currently it plays aproximately at `1500 ELO`. Current Improvement areas include efficiently calculating moves which can give fruitfull results and hence can be helpful to increase Engine's `DEPTH` of calculating moves.
 
 ## Technologies
 * Python 3.12.3
