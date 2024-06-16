@@ -23,7 +23,7 @@ Clion is a Chess Engine developed in Python. It is an attempt to develop an Engi
    ```
 2. **Execute command** 
    ```bash
-   pip3 install requirements.txt
+   pip install requirements.txt
    ```
 3. Change directory to `src`:
    ```bash
