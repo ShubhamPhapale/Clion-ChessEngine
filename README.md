@@ -25,8 +25,8 @@ Clion is a Chess Engine developed in Python. It is an attempt to develop an Engi
    ```bash
    pip install requirements.txt
    ```
-Note : You may directly use the newenv by activating it
-3. Change directory to `src`:
+   Note : You may directly use the newenv by activating it
+3. **Change directory to `src`**
    ```bash
    cd src
    ```
