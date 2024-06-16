@@ -19,7 +19,7 @@ Clion is a Chess Engine developed in Python. It is an attempt to develop an Engi
 ## Instructions
 1.  **Clone the Repository**:
    ```bash
-   https://github.com/ShubhamPhapale/Clion-ChessEngine.git
+   git clone https://github.com/ShubhamPhapale/Clion-ChessEngine.git
 
    ```
 2. **Execute command** 
@@ -34,7 +34,7 @@ Clion is a Chess Engine developed in Python. It is an attempt to develop an Engi
    ```bash
    python chessmain.py
    ```
-4. Note : You can select Human / AI to play in the ChessMain.py by setting boolean flags for whiteplayer / blackplayer
+Note : You can select Human / AI to play in the ChessMain.py by setting boolean flags for whiteplayer / blackplayer
 
 #### Handling:
 * Press `z` to undo a move.
