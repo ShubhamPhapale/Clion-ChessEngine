@@ -41,6 +41,11 @@ Note : You can select Human / AI to play in the ChessMain.py by setting boolean 
 * Press `z` to undo a move.
 * Press `r` to reset the game.
 
+## Additional Resources
+
+- [YouTube Video](https://youtu.be/Ym0UC2HWFBY)
+- [My YouTube Channel](https://www.youtube.com/channel/UCzOmg9hOy3NBsScX--Nrb5Q)
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
