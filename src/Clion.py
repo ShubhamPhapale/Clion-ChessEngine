@@ -37,7 +37,7 @@ def main():
     square_Selected = ()
     player_Clicks = []
     game_Over = False
-    white_Player = False
+    white_Player = True
     black_Player = False
     AI_Thinking = False
     move_Finder_Process = None

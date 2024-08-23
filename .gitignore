@@ -1,0 +1,7 @@
+# Ignore a specific file
+M11.2.bin
+Ranomi 1.4.bin
+Titans.bin
+
+# Ignore a specific directory
+/3-4-5_pieces_Syzygy/

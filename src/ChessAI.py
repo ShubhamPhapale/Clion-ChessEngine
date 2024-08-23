@@ -111,7 +111,7 @@ piece_Position_Scores = {
 
 CHECKMATE = 100000
 STALEMATE = 0
-DEPTH = 3
+DEPTH = 5
 
 def find_Random_Move(valid_Moves):
     return valid_Moves[random.randint(0, len(valid_Moves) - 1)]
@@ -126,7 +126,7 @@ def find_Best_Move(gs, valid_Moves, return_Queue):
 
     # Check for book move
     try:
-        with chess.polyglot.open_reader('M11.2.bin') as reader:
+        with chess.polyglot.open_reader('./M11.2.bin') as reader:
             moves = []
             for entry in reader.find_all(board):
                 moves.append(entry.move)

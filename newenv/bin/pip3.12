@@ -1,4 +1,4 @@
-#!/Users/shubhamsarjeraophapale/AIAIAIAIAICHESS/newenv/bin/python3.12
+#!/Users/shubhamsarjeraophapale/Clion-ChessEngine/newEnv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys
