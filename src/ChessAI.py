@@ -110,8 +110,8 @@ piece_Position_Scores = {
 }
 
 CHECKMATE = 100000
-STALEMATE = 0
-DEPTH = 5
+DRAW = 0
+DEPTH = 1
 
 def find_Random_Move(valid_Moves):
     return valid_Moves[random.randint(0, len(valid_Moves) - 1)]
@@ -125,23 +125,23 @@ def find_Best_Move(gs, valid_Moves, return_Queue):
     board = chess.Board(gs.board_to_fen())
 
     # Check for book move
-    try:
-        with chess.polyglot.open_reader('./M11.2.bin') as reader:
-            moves = []
-            for entry in reader.find_all(board):
-                moves.append(entry.move)
-                if len(moves) >= 1:
-                    break
-            if moves:
-                book_move = random.choice(moves)
-                for move in valid_Moves:
-                    if move.get_Chess_Notation() == str(book_move):
-                        book_move = move
-                return_Queue.put(book_move)
-                return_Queue.put(0)
-                return
-    except:
-        pass
+    # try:
+    #     with chess.polyglot.open_reader('books/M11.2.bin') as reader:
+    #         moves = []
+    #         for entry in reader.find_all(board):
+    #             moves.append(entry.move)
+    #             if len(moves) >= 1:
+    #                 break
+    #         if moves:
+    #             book_move = random.choice(moves)
+    #             for move in valid_Moves:
+    #                 if move.get_Chess_Notation() == str(book_move):
+    #                     book_move = move
+    #             return_Queue.put(book_move)
+    #             return_Queue.put(0)
+    #             return
+    # except:
+    #     pass
 
     # try:
     #     with chess.syzygy.open_tablebase("3-4-5_pieces_Syzygy") as tablebase:
@@ -194,7 +194,7 @@ def find_mate_in_n(gs, valid_Moves, depth, is_white_to_move):
             return move, 1
         if depth > 1:
             opponent_moves = gs.get_Valid_Moves()
-            if gs.stalemate:  # Stalemate
+            if gs.stalemate or gs.is_Threefold_Repetition() or gs.is_Fifty_Move_Rule():  # Stalemate or Threefold Repetition or Fifty Move Rule
                 gs.undo_Move()
                 continue
             all_lose = True
@@ -221,6 +221,7 @@ def find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, depth, alpha, beta, turn):
     
     max_Score = -CHECKMATE
     for move in valid_Moves:
+        gs.add_Board_State()  # Add board state before making the move
         gs.make_Move(move)
         next_Moves = gs.get_Valid_Moves()
         score = -find_Move_Nega_Max_Alpha_Beta(gs, next_Moves, depth - 1, -beta, -alpha, -turn)
@@ -230,13 +231,14 @@ def find_Move_Nega_Max_Alpha_Beta(gs, valid_Moves, depth, alpha, beta, turn):
                 next_Move = move
                 print(str(next_Move), "% .2f" % max_Score, "at depth", DEPTH)
         gs.undo_Move()
+        gs.remove_Board_State()  # Remove board state after undoing the move
         if max_Score > alpha:
             alpha = max_Score
         if alpha >= beta:
             break
 
-    if gs.stalemate: 
-        max_Score = STALEMATE
+    if gs.stalemate or gs.is_Threefold_Repetition() or gs.is_Fifty_Move_Rule(): 
+        max_Score = DRAW
 
     return max_Score
 
@@ -247,7 +249,7 @@ def score_Board(gs):
         else:
             return CHECKMATE
     elif gs.stalemate:
-        return STALEMATE
+        return DRAW
 
     score = score_Position(gs)
     return score / 100

@@ -1,4 +1,5 @@
 import pygame as p
+import time
 import math
 import ChessEngine, ChessAI
 from multiprocessing import Process, Queue
@@ -11,11 +12,22 @@ EVAL_BAR_HEIGHT = BOARD_HEIGHT
 DIMENSION = 8
 SQUARE_SIZE = BOARD_HEIGHT // DIMENSION
 MAX_FPS = 15
+SOUNDS= {}
 IMAGES = {}
 
 scroll_offset = 0
 scroll_step = 4
 SCROLL_SPEED = 20
+
+play = True
+
+def play_mp3(file_name):
+    SOUNDS[file_name].play()
+
+def load_Sounds():
+    sounds = ["Capture", "Move", "GameOver", "Check", "NewGame"]
+    for sound in sounds:
+        SOUNDS[sound] = p.mixer.Sound("sounds/" + sound + ".mp3")
 
 def load_Images():
     pieces = ['wP', 'wN', 'wB', 'wR', 'wQ', 'wK', 'bP', 'bN', 'bB', 'bR', 'bQ', 'bK']
@@ -33,19 +45,21 @@ def main():
     move_Made = False
     animate = False
     load_Images()
+    load_Sounds()
     running = True
     square_Selected = ()
     player_Clicks = []
     game_Over = False
     white_Player = True
-    black_Player = False
+    black_Player = True
     AI_Thinking = False
     move_Finder_Process = None
     move_Undone = False
 
-    global eval_Score
+    global eval_Score, play
     eval_Score = 0.15
 
+    play_mp3("NewGame")
     while running: 
         human_Turn = (gs.whiteToMove and white_Player) or (not gs.whiteToMove and black_Player)
         for  e in p.event.get():
@@ -64,7 +78,7 @@ def main():
                         square_Selected = (row, col)
                         player_Clicks.append(square_Selected)
                     if len(player_Clicks) == 2  and human_Turn:
-                        move = ChessEngine.Move(player_Clicks[0], player_Clicks[1], gs.board)
+                        move = ChessEngine.Move(player_Clicks[0], player_Clicks[1], gs.board, gs.halfmoveClock)
                         for i in range(len(valid_Moves)):
                             if move == valid_Moves[i]:
                                 gs.make_Move(valid_Moves[i])
@@ -87,6 +101,7 @@ def main():
                         move_Finder_Process.terminate()
                         AI_Thinking = False
                     move_Undone = True
+                    play = True
                 if e.key == p.K_r:
                     gs = ChessEngine.Gamestate()
                     valid_Moves = gs.get_Valid_Moves()
@@ -100,6 +115,8 @@ def main():
                         move_Finder_Process.terminate()
                         AI_Thinking = False
                     move_Undone = True
+                    play = True
+                    play_mp3("NewGame")
     
         if not game_Over and not human_Turn and not move_Made and not move_Undone:
             if not AI_Thinking:
@@ -120,6 +137,10 @@ def main():
 
         if move_Made:
             if animate:
+                if gs.moveLog[-1].is_Capture:
+                    play_mp3("Capture")
+                else:
+                    play_mp3("Move")
                 animate_Move(gs.moveLog[-1], screen, gs.board, clock)
                 print("Move made:", str(gs.moveLog[-1]))
             valid_Moves = gs.get_Valid_Moves()
@@ -129,10 +150,17 @@ def main():
 
         draw_Game_State(screen, gs, valid_Moves, square_Selected, move_Log_Font)
 
-        if gs.checkmate or gs.stalemate:
+        if gs.checkmate or gs.stalemate or gs.is_Threefold_Repetition() or gs.is_Fifty_Move_Rule():
             game_Over = True
-            text = "Stalemate" if gs.stalemate else "Black Wins By Checkmate" if gs.whiteToMove else "White Wins By Checkmate"
+            text = ("Draw by Threefold Repetition" if gs.is_Threefold_Repetition() else 
+                    "Draw by 50-Move Rule" if gs.is_Fifty_Move_Rule() else
+                    "Stalemate" if gs.stalemate else 
+                    "Black Wins By Checkmate" if gs.whiteToMove else 
+                    "White Wins By Checkmate") if (gs.checkmate or gs.stalemate or gs.is_Threefold_Repetition() or gs.is_Fifty_Move_Rule()) else ""
             draw_Game_Ended_Text(screen, text)
+            if play:
+                play_mp3("GameOver")
+                play = False
 
         clock.tick(MAX_FPS)
         p.display.flip()

@@ -72,6 +72,34 @@ class Gamestate():
 
         self.castle_Rights_Log = [castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs, self.current_Castling_Right.bks, self.current_Castling_Right.bqs)]
 
+        # New attributes for halfmove clock and fullmove number
+        self.halfmoveClock = 0
+        self.fullmoveNumber = 1
+        
+        # Track board positions for threefold repetition
+        self.boardStateCount = {}
+        self.add_Board_State()
+
+    def add_Board_State(self):
+        fen = self.board_to_fen(for_repetition=True)
+        if fen in self.boardStateCount:
+            self.boardStateCount[fen] += 1
+        else:
+            self.boardStateCount[fen] = 1
+        print(f"Added board state: {self.board_to_fen()}")
+
+    def remove_Board_State(self):
+        fen = self.board_to_fen(for_repetition=True)
+        self.boardStateCount[fen] -= 1
+        if self.boardStateCount[fen] == 0:
+            print(f"Removing board state: {self.board_to_fen(for_repetition=True)}")
+            del self.boardStateCount[fen]
+            print(f"Removed board state: {self.board_to_fen(for_repetition=True)}")
+
+    def is_Threefold_Repetition(self):
+        fen = self.board_to_fen(for_repetition=True)
+        return self.boardStateCount.get(fen, 0) >= 3
+
     def make_Move(self, move):
         self.board[move.start_Row][move.start_Col] = "--"
         self.board[move.end_Row][move.end_Col] = move.piece_Moved
@@ -86,6 +114,16 @@ class Gamestate():
             self.enpassant_Possible = ((move.end_Row + move.start_Row) // 2, move.end_Col)
         else:
             self.enpassant_Possible = ()
+
+        # Reset halfmove clock if a pawn moves or a capture is made
+        if move.piece_Moved[1] == 'P' or move.piece_Captured != "--":
+            self.halfmoveClock = 0
+        else:
+            self.halfmoveClock += 1
+
+        # Update fullmove number after Black's move
+        if not self.whiteToMove:
+            self.fullmoveNumber += 1
 
         if move.en_Passant:
             self.board[move.start_Row][move.end_Col] = "--"
@@ -108,6 +146,9 @@ class Gamestate():
         self.update_Castle_Rights(move)
         self.castle_Rights_Log.append(castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs,
                                                      self.current_Castling_Right.bks, self.current_Castling_Right.bqs))
+        
+        # Increment the board state count for threefold repetition
+        self.add_Board_State()
 
     def undo_Move(self):
         if len(self.moveLog) != 0:
@@ -119,6 +160,16 @@ class Gamestate():
                 self.white_King_Location = (move.start_Row, move.start_Col)
             elif move.piece_Moved == 'bK':
                 self.black_King_Location = (move.start_Row, move.start_Col)
+
+            # Restore the halfmove clock
+            if move.piece_Moved[1] == 'P' or move.piece_Captured != "--":
+                self.halfmoveClock = move.previousHalfmoveClock  # Assuming you store this in the move object
+            else:
+                self.halfmoveClock -= 1
+
+            # Decrement fullmove number if undoing a Black move
+            if not self.whiteToMove:
+                self.fullmoveNumber -= 1
 
             if move.en_Passant:
                 self.board[move.end_Row][move.end_Col] = "--"
@@ -139,6 +190,14 @@ class Gamestate():
                 else:
                     self.board[move.end_Row][move.end_Col - 2] = self.board[move.end_Row][move.end_Col + 1]
                     self.board[move.end_Row][move.end_Col + 1] = "--"
+
+            # Decrement the board state count for threefold repetition
+            # Remove the board state only if it exists
+            fen = self.board_to_fen()
+            if fen in self.boardStateCount:
+                self.remove_Board_State()
+            else:
+                print(f"Warning: Attempted to remove non-existent board state: {fen}")
 
             self.checkmate = False
             self.stalemate = False
@@ -226,15 +285,15 @@ class Gamestate():
             if not piece_Pinned or pin_Direction == (move_Amount, 0):
                 if r + move_Amount == back_Row:
                     pawn_Promotion = True
-                moves.append(Move((r, c), (r + move_Amount, c), self.board, pawn_Promotion = pawn_Promotion))
+                moves.append(Move((r, c), (r + move_Amount, c), self.board, self.halfmoveClock, pawn_Promotion = pawn_Promotion))
                 if r == start_Row and self.board[r + 2 * move_Amount][c] == "--":
-                    moves.append(Move((r, c), (r + 2 * move_Amount, c), self.board))
+                    moves.append(Move((r, c), (r + 2 * move_Amount, c), self.board, self.halfmoveClock))
         if c - 1 >= 0:
             if not piece_Pinned or pin_Direction == (move_Amount, -1):
                 if self.board[r + move_Amount][c - 1][0] == enemy:
                     if r + move_Amount == back_Row:
                         pawn_Promotion = True
-                    moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, pawn_Promotion = pawn_Promotion))
+                    moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, self.halfmoveClock, pawn_Promotion = pawn_Promotion))
                 if (r + move_Amount, c - 1) == self.enpassant_Possible:
                     attacking_Piece = blocking_Piece = False
                     if king_Row == r:
@@ -254,13 +313,13 @@ class Gamestate():
                             elif square != "--":
                                 blocking_Piece = True
                     if not attacking_Piece or blocking_Piece:
-                        moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, en_Passant = True))
+                        moves.append(Move((r, c), (r + move_Amount, c - 1), self.board, self.halfmoveClock, en_Passant = True))
         if c + 1 <= 7:
             if not piece_Pinned or pin_Direction == (move_Amount, 1):
                 if self.board[r + move_Amount][c + 1][0] == enemy:
                     if r + move_Amount == back_Row:
                         pawn_Promotion = True
-                    moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, pawn_Promotion = pawn_Promotion))
+                    moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, self.halfmoveClock, pawn_Promotion = pawn_Promotion))
                 if (r + move_Amount, c + 1) == self.enpassant_Possible:
                     attacking_Piece = blocking_Piece = False
                     if king_Row == r:
@@ -280,7 +339,7 @@ class Gamestate():
                             elif square != "--":
                                 blocking_Piece = True
                     if not attacking_Piece or blocking_Piece:
-                        moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, en_Passant = True))
+                        moves.append(Move((r, c), (r + move_Amount, c + 1), self.board, self.halfmoveClock, en_Passant = True))
 
     def get_Knight_Moves(self, r, c, moves):
         piece_Pinned = False
@@ -299,7 +358,7 @@ class Gamestate():
                 if not piece_Pinned:
                     piece = self.board[row][col][0]
                     if piece != ally:
-                        moves.append(Move((r,c), (row, col), self.board))
+                        moves.append(Move((r,c), (row, col), self.board, self.halfmoveClock))
 
     def get_Bishop_Moves(self, r, c, moves):
         piece_Pinned = False
@@ -322,9 +381,9 @@ class Gamestate():
                     if not piece_Pinned or pin_Direction == d or pin_Direction == (-d[0], -d[1]):
                         piece = self.board[row][col][0]
                         if piece == '-':
-                            moves.append(Move((r,c), (row, col), self.board))
+                            moves.append(Move((r,c), (row, col), self.board, self.halfmoveClock))
                         elif piece == enemy:
-                            moves.append(Move((r, c), (row, col), self.board))
+                            moves.append(Move((r, c), (row, col), self.board, self.halfmoveClock))
                             break
                         else:
                             break
@@ -351,9 +410,9 @@ class Gamestate():
                     if not piece_Pinned or pin_Direction == d or pin_Direction == (-d[0], -d[1]):
                         piece = self.board[row][col][0]
                         if piece == '-':
-                            moves.append(Move((r,c), (row, col), self.board))
+                            moves.append(Move((r,c), (row, col), self.board, self.halfmoveClock))
                         elif piece == enemy:
-                            moves.append(Move((r, c), (row, col), self.board))
+                            moves.append(Move((r, c), (row, col), self.board, self.halfmoveClock))
                             break
                         else:
                             break
@@ -380,7 +439,7 @@ class Gamestate():
                         self.black_King_Location = (row, col)
                     in_Check, pins, checks = self.check_For_Pins_And_Checks()
                     if not in_Check:
-                        moves.append(Move((r,c), (row, col), self.board))
+                        moves.append(Move((r,c), (row, col), self.board, self.halfmoveClock))
                     if ally == 'w':
                         self.white_King_Location = (r, c)
                     else:
@@ -399,12 +458,12 @@ class Gamestate():
     def get_Kingside_Castle_Moves(self, r, c, moves, ally):
         if self.board[r][c + 1] == "--" and self.board[r][c + 2] == "--" and \
             not self.square_Under_Attack(r, c + 1, ally) and not self.square_Under_Attack(r, c + 2, ally):
-            moves.append(Move((r, c), (r, c + 2), self.board, castle = True))
+            moves.append(Move((r, c), (r, c + 2), self.board, self.halfmoveClock, castle = True))
 
     def get_Queenside_Castle_Moves (self, r, c, moves, ally):
         if self.board[r][c - 1] == "--" and self.board[r][c - 2] == "--" and self.board[r][c - 3] == "--" and \
             not self.square_Under_Attack(r, c - 1, ally) and not self.square_Under_Attack(r, c - 2, ally):
-            moves.append(Move((r, c), (r, c - 2), self.board, castle = True))
+            moves.append(Move((r, c), (r, c - 2), self.board, self.halfmoveClock, castle = True))
 
     def square_Under_Attack(self, r, c, ally):
         enemy = 'w' if ally == 'b' else 'b'
@@ -529,7 +588,7 @@ class Gamestate():
                 elif move.end_Col == 0:
                     self.current_Castling_Right.bqs = False
     
-    def board_to_fen(self):
+    def board_to_fen(self, for_repetition=False):
         def get_castling_rights():
             rights = ""
             if self.current_Castling_Right.wks:
@@ -543,11 +602,10 @@ class Gamestate():
             return rights if rights else "-"
 
         def get_en_passant_target():
-            if self.enpassant_Possible != ():
-                move = Move((0, 0), self.enpassant_Possible, self.board) #demo move
+            if self.enpassant_Possible:
+                move = Move((0, 0), self.enpassant_Possible, self.board, self.halfmoveClock)  # demo move
                 return move.get_Rank_Files(self.enpassant_Possible[0], self.enpassant_Possible[1])
-            else:
-                return "-"
+            return "-"
 
         fen = ""
         for row in self.board:
@@ -563,7 +621,7 @@ class Gamestate():
             if empty_count > 0:
                 fen += str(empty_count)
             fen += "/"
-        fen = fen[:-1]  # Remove the last "/"
+        fen = fen.rstrip("/")  # Remove the last "/"
         
         # Add the side to move
         fen += " w" if self.whiteToMove else " b"
@@ -574,11 +632,20 @@ class Gamestate():
         # Add en passant target square
         fen += " " + get_en_passant_target()
         
-        # Add halfmove clock and fullmove number (simplified here)
-        fen += " 0 1"
+        if not for_repetition:
+            # Add halfmove clock and fullmove number for normal FEN
+            fen += f" {self.halfmoveClock} {self.fullmoveNumber}"
         
         return fen
     
+    def is_Fifty_Move_Rule(self):
+        fen = self.board_to_fen()
+        fields = fen.split()
+        if len(fields) >= 5:
+            halfmove_clock = int(fields[4])
+            return halfmove_clock >= 100
+        return False
+
 class castle_Rights():
     def __init__(self, wks, wqs, bks, bqs):
         self.wks = wks
@@ -592,7 +659,7 @@ class Move():
     files_To_Cols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     Cols_To_Files = {v: k for k, v in files_To_Cols.items()}
 
-    def __init__(self, start_Square, end_Square, board, en_Passant = False, pawn_Promotion = False, castle = False):
+    def __init__(self, start_Square, end_Square, board, halfmoveClock, en_Passant = False, pawn_Promotion = False, castle = False):
         self.start_Row = start_Square[0]
         self.start_Col = start_Square[1]
         self.end_Row = end_Square[0]
@@ -608,6 +675,9 @@ class Move():
             self.piece_Captured = 'bP' if self.piece_Moved == 'wP' else 'wP'
 
         self.is_Capture = self.piece_Captured != "--"
+
+        # Store the halfmove clock before this move
+        self.previousHalfmoveClock = halfmoveClock
 
     '''
     overriding the equals method
