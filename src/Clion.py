@@ -38,7 +38,7 @@ def main():
     player_Clicks = []
     game_Over = False
     white_Player = False
-    black_Player = True
+    black_Player = False
     AI_Thinking = False
     move_Finder_Process = None
     move_Undone = False
@@ -92,7 +92,8 @@ def main():
                     valid_Moves = gs.get_Valid_Moves()
                     square_Selected = ()
                     player_Clicks = []
-                    move_Made = False
+                    # move_Made = False
+                    move_Made = True
                     animate = False
                     game_Over = False
                     if AI_Thinking:

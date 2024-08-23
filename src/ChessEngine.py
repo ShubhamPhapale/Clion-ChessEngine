@@ -21,6 +21,27 @@ class Gamestate():
         #     ["--", "wP", "--", "--", "--", "--", "wB", "--"],
         #     ["--", "--", "--", "--", "--", "--", "bQ", "--"]
         #     ]
+        # self.board = [
+        #     ["--", "--", "bK", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "bQ", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "wR", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "wP", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "wK", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"]
+        #     ]
+        # self.board = [
+        #     ["--", "--", "--", "bB", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "bP"],
+        #     ["--", "--", "--", "--", "--", "wK", "--", "bK"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "bP", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "wP", "--"],
+        #     ["--", "--", "wR", "--", "--", "--", "--", "--"]
+        #     ]
+        
         self.moveFunctions = {'P': self.get_Pawn_Moves, 'N': self.get_Knight_Moves, 'B': self.get_Bishop_Moves,
                               'R': self.get_Rook_Moves, 'Q': self.get_Queen_Moves, 'K': self.get_King_Moves}
         self.whiteToMove = True
@@ -47,6 +68,7 @@ class Gamestate():
 
         #Don't forget to update current castling right for custom position
         #here
+        # self.current_Castling_Right = castle_Rights(False, False, False, False)
 
         self.castle_Rights_Log = [castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs, self.current_Castling_Right.bks, self.current_Castling_Right.bqs)]
 
@@ -84,7 +106,8 @@ class Gamestate():
         self.enpassant_Possible_Log.append(self.enpassant_Possible)
 
         self.update_Castle_Rights(move)
-        self.castle_Rights_Log.append(castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs, self.current_Castling_Right.bks, self.current_Castling_Right.bqs))
+        self.castle_Rights_Log.append(castle_Rights(self.current_Castling_Right.wks, self.current_Castling_Right.wqs,
+                                                     self.current_Castling_Right.bks, self.current_Castling_Right.bqs))
 
     def undo_Move(self):
         if len(self.moveLog) != 0:
@@ -106,7 +129,8 @@ class Gamestate():
 
             self.castle_Rights_Log.pop()
             new_Castle_Rights = self.castle_Rights_Log[-1]
-            self.current_Castling_Right = castle_Rights(new_Castle_Rights.wks, new_Castle_Rights.wqs, new_Castle_Rights.bks, new_Castle_Rights.bqs)
+            self.current_Castling_Right = castle_Rights(new_Castle_Rights.wks, new_Castle_Rights.wqs,
+                                                         new_Castle_Rights.bks, new_Castle_Rights.bqs)
 
             if move.castle:
                 if move.end_Col - move.start_Col == 2:
@@ -564,9 +588,9 @@ class castle_Rights():
 
 class Move():
     ranks_To_Rows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
-    rows_TO_Ranks = {v: k for k, v in ranks_To_Rows.items()}
-    filess_To_Cols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
-    Cols_TO_Files = {v: k for k, v in filess_To_Cols.items()}
+    rows_To_Ranks = {v: k for k, v in ranks_To_Rows.items()}
+    files_To_Cols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+    Cols_To_Files = {v: k for k, v in files_To_Cols.items()}
 
     def __init__(self, start_Square, end_Square, board, en_Passant = False, pawn_Promotion = False, castle = False):
         self.start_Row = start_Square[0]
@@ -597,7 +621,7 @@ class Move():
         return self.get_Rank_Files(self.start_Row, self.start_Col) + self.get_Rank_Files(self.end_Row, self.end_Col)
     
     def get_Rank_Files(self, row, col):
-        return self.Cols_TO_Files[col] + self.rows_TO_Ranks[row]
+        return self.Cols_To_Files[col] + self.rows_To_Ranks[row]
     
     '''
     overriding the string function
@@ -612,7 +636,7 @@ class Move():
             # if self.pawn_Promotion:
             #     return end_Square + "=" + 'Q' # self.piece_Moved[1]
             if self.is_Capture:
-                return self.Cols_TO_Files[self.start_Col] + 'x' + end_Square
+                return self.Cols_To_Files[self.start_Col] + 'x' + end_Square
             else:
                 return end_Square
 
