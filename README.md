@@ -1,54 +1,85 @@
-# Clion-ChessEngine
+# Chess Engine
 
-## Table of contents
-* [General info](#general-info)
-* [Technologies](#technologies)
-* [Instructions](#instructions)
-* [Contributing](#contributing)
+A Python chess engine with a graphical interface built using Pygame. The engine features a modular design, an AI player that plays at approximately 1800 ELO rating, and supports standard chess rules including castling, en passant, and pawn promotion.
 
+## Features
 
-## General info
-Clion is a Chess Engine developed in Python. It is an attempt to develop an Engine which can play at `FIDE` Rating of `2000+` currently it plays aproximately at `1800 ELO`. Current Improvement areas include efficiently calculating moves which can give fruitfull results and hence can be helpful to increase Engine's `DEPTH` of calculating moves.
+- Full implementation of chess rules
+- Graphical user interface with piece movement animation
+- AI opponent using alpha-beta pruning search
+- Support for:
+  - Castling (kingside and queenside)
+  - En passant captures
+  - Pawn promotion
+  - Threefold repetition detection
+  - Fifty-move rule
+- Move validation and legal move highlighting
+- Game state tracking (checkmate, stalemate, draws)
+- Undo move functionality
 
-## Technologies
-* Python 3.12.3
-* pygame 2.0.1
+## Project Structure
 
-## Instructions
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/ShubhamPhapale/Clion-ChessEngine.git
-   ```
-2. **Execute command** 
-   ```bash
-   pip install requirements.txt
-   ```
-   Note : You may directly use the newenv by activating it
-3. **Change directory to `src`**
-   ```bash
-   cd src
-   ```
-3. **Execute Command**:
-   ```bash
-   python ChessMain.py
-   ```
-Note : You can select Human / AI to play in the ChessMain.py by setting boolean flags for whiteplayer / blackplayer
+```
+src/
+  ├── core/           # Core game logic
+  │   ├── game_state.py
+  │   ├── move.py
+  │   └── castle_rights.py
+  ├── ai/             # AI player implementation
+  │   ├── engine.py
+  │   └── evaluator.py
+  ├── ui/             # User interface
+  │   └── game_ui.py
+  ├── utils/          # Utility functions
+  │   ├── constants.py
+  │   └── fen.py
+  └── main.py         # Main game entry point
+```
 
-#### Handling:
-* Press `z` to undo a move.
-* Press `r` to reset the game.
+## Requirements
 
-## Additional Resources
+- Python 3.12+
+- Pygame
+- python-chess
 
-- [YouTube Video](https://youtu.be/Ym0UC2HWFBY)
-- [My YouTube Channel](https://www.youtube.com/channel/UCzOmg9hOy3NBsScX--Nrb5Q)
+Install dependencies using:
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+1. Clone the repository
+2. Install dependencies
+3. Run the game:
+```bash
+python src/main.py
+```
+
+## Controls
+
+- Mouse: Click and drag pieces to move them
+- 'z': Undo last move
+- 'r': Reset game
+- Close window to quit
+
+## AI Features
+
+The AI player uses several techniques to play strong chess:
+
+- Alpha-beta pruning search
+- Position evaluation using:
+  - Material counting
+  - Piece-square tables
+  - Mobility evaluation
+  - King safety assessment
+- Endgame detection and specialized evaluation
+- Move ordering for better pruning
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Feel free to open issues or submit pull requests for improvements or bug fixes.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Added some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
